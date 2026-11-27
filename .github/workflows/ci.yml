@@ -18,6 +18,8 @@ jobs:
     name: Lint, Typen, Tests und Build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    outputs:
+      version: ${{ steps.pages-version.outputs.version }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -31,6 +33,11 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps --only-shell chromium firefox webkit
       - run: npm run test:e2e
+      - id: pages-version
+        if: github.event_name == 'push'
+        run: |
+          version="$(node -p "require('./dist/version.json').version")"
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-pages-artifact@v4
         if: github.event_name == 'push'
         with:
@@ -50,5 +57,28 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Pages-Quelle prüfen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source="$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type')"
+          if [[ "$source" != workflow ]]; then
+            echo "::error::In Settings → Pages muss GitHub Actions als Quelle ausgewählt sein."
+            exit 1
+          fi
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Veröffentlichte Build-Version prüfen
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+          EXPECTED_VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          for attempt in {1..8}; do
+            if version="$(curl -fsS --max-time 8 -H 'Cache-Control: no-cache' "${PAGE_URL%/}/version.json?run=$GITHUB_RUN_ID-$attempt" | jq -er .version)" &&
+                [[ "$version" == "$EXPECTED_VERSION" ]]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Auf der Pages-URL ist die geprüfte Build-Version nicht erreichbar."
+          exit 1

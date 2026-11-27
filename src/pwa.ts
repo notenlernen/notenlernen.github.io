@@ -1,5 +1,7 @@
+import { beforeUpdate } from './round-lock';
+
 async function latestWorker(): Promise<string> {
-  const response = await fetch('/version.json', { cache: 'no-store' });
+  const response = await fetch(`/version.json?check=${Date.now()}`, { cache: 'no-store' });
   if (!response.ok) throw new Error('Die aktuelle Version ist nicht abrufbar.');
   const { version } = await response.json();
   if (typeof version !== 'string' || !/^[a-f0-9]{64}$/.test(version)) {
@@ -12,7 +14,6 @@ export async function setupPwa(
   status: HTMLElement,
   check: HTMLButtonElement,
   apply: HTMLButtonElement,
-  canApplyUpdate: () => boolean,
 ): Promise<void> {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) {
     status.textContent = 'Der Offline-Modus ist hier nicht verfügbar.';
@@ -22,6 +23,7 @@ export async function setupPwa(
   const workers = navigator.serviceWorker;
   let available: string | undefined;
   let activating: string | undefined;
+  let releaseUpdate: (() => void) | undefined;
 
   const showStatus = () => {
     apply.hidden = !available || available === workers.controller?.scriptURL;
@@ -35,7 +37,7 @@ export async function setupPwa(
     try {
       const latest = await latestWorker();
       const registration = await workers.getRegistration();
-      if (registration?.active || registration?.waiting || registration?.installing) {
+      if (workers.controller || registration?.active || registration?.waiting || registration?.installing) {
         available = latest;
         showStatus();
         return;
@@ -50,6 +52,8 @@ export async function setupPwa(
 
   const installationFailed = () => {
     activating = undefined;
+    releaseUpdate?.();
+    releaseUpdate = undefined;
     apply.disabled = false;
     status.textContent = 'Der Offline-Download konnte nicht abgeschlossen werden. Bitte erneut versuchen.';
   };
@@ -58,30 +62,54 @@ export async function setupPwa(
     try {
       const registration = await workers.register(url, { updateViaCache: 'none' });
       const installing = registration.installing;
-      if (installing?.state === 'redundant') installationFailed();
-      else installing?.addEventListener('statechange', () => {
-        if (installing.state === 'redundant' && workers.controller?.scriptURL !== url) installationFailed();
-      });
+      if (installing?.scriptURL !== url) return;
+      const observeInstall = () => {
+        if (installing.state === 'installing') return;
+        installing.removeEventListener('statechange', observeInstall);
+        if (installing.state === 'redundant' && (!activating || activating === url) && workers.controller?.scriptURL !== url) {
+          installationFailed();
+        }
+      };
+      installing.addEventListener('statechange', observeInstall);
+      observeInstall();
     } catch {
       installationFailed();
     }
   }
 
   workers.addEventListener('controllerchange', () => {
-    if (activating === workers.controller?.scriptURL && activating) window.location.reload();
-    else showStatus();
+    if (activating && activating === workers.controller?.scriptURL) {
+      releaseUpdate?.();
+      location.reload();
+    } else showStatus();
   });
   check.addEventListener('click', () => void inspectVersion(true));
-  apply.addEventListener('click', () => {
-    if (!available || activating) return;
-    if (!canApplyUpdate()) {
-      status.textContent = 'Updates sind nach Abschluss der Runde möglich.';
-      return;
-    }
-    activating = available;
+  apply.addEventListener('click', async () => {
+    if (!available || apply.disabled) return;
+    const url = available;
     apply.disabled = true;
-    status.textContent = 'Update wird angewendet.';
-    void register(available);
+    try {
+      const accepted = await beforeUpdate(() => new Promise<void>((resolve) => {
+        if (workers.controller?.scriptURL === url) {
+          showStatus();
+          resolve();
+          return;
+        }
+        activating = url;
+        releaseUpdate = resolve;
+        status.textContent = 'Update wird angewendet.';
+        void register(url);
+      }));
+      if (!accepted) {
+        status.textContent = navigator.locks
+          ? 'Updates sind nach Abschluss aller offenen Runden möglich.'
+          : 'Sichere Updates werden von diesem Browser nicht unterstützt.';
+      }
+    } catch {
+      installationFailed();
+    } finally {
+      apply.disabled = false;
+    }
   });
 
   showStatus();

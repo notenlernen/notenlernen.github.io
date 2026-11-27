@@ -54,3 +54,20 @@ h1 { font-size: clamp(1.6rem, 5vw, 3rem); line-height: 1.15; margin: 0; overflow
 section p { margin-bottom: 0; }
 .settings, .offline { margin-block: 1.25rem; }
 [hidden] { display: none; }
+
+#round-setup, #round-play, #round-result { margin-top: 1.25rem; }
+fieldset { border: 1px solid var(--line); border-radius: .5rem; margin: .8rem 0; min-inline-size: 0; }
+.key-groups, .round-settings { display: flex; flex-wrap: wrap; gap: .75rem; }
+.key-groups fieldset { flex: 1 1 15rem; margin: .25rem 0; }
+.key-groups label { display: inline-flex; align-items: center; gap: .25rem; min-height: 44px; padding-inline: .4rem; }
+.quick-keys, .answers { display: flex; flex-wrap: wrap; gap: .5rem; }
+.round-settings { margin-bottom: 1rem; }
+.round-settings label { display: block; }
+button[aria-disabled="true"] { cursor: default; }
+.answers button[data-correct="true"] { background: var(--accent); color: var(--surface); }
+#notation { max-width: 350px; color-scheme: light; background: #fff; border-radius: .5rem; margin-block: .75rem; }
+#notation svg { display: block; width: 100%; height: auto; }
+#round-result dl { display: grid; grid-template-columns: minmax(0, max-content) auto; gap: .4rem 1rem; }
+#round-result dd { margin: 0; }
+#feedback { min-height: 1.6em; }
+input[type="number"] { max-width: 7rem; min-height: 44px; font: inherit; }

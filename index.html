@@ -22,9 +22,65 @@
       </nav>
     </header>
     <main id="inhalt" class="shell" tabindex="-1">
+      <div class="offline">
+        <p id="offline-status" role="status"></p>
+        <button id="check-update" type="button" hidden>Nach Updates suchen</button>
+        <button id="apply-update" type="button" hidden>Update anwenden</button>
+      </div>
       <section aria-labelledby="bereich">
         <h1 id="bereich" tabindex="-1">Notennamen</h1>
-        <p id="beschreibung">Das Training für Notennamen folgt in M1.</p>
+        <p id="beschreibung">Lies die Note und wähle ihren Namen.</p>
+        <div id="note-trainer">
+          <form id="round-setup">
+            <label for="clefs">Notenschlüssel</label>
+            <select id="clefs">
+              <option value="treble">Violinschlüssel</option>
+              <option value="bass">Bassschlüssel</option>
+              <option value="mixed">Violin- und Bassschlüssel</option>
+            </select>
+            <fieldset>
+              <legend>Tonarten</legend>
+              <div class="quick-keys">
+                <button type="button" data-keys="major">Alle Dur</button>
+                <button type="button" data-keys="minor">Alle Moll</button>
+                <button type="button" data-keys="simple">Bis zwei Vorzeichen</button>
+                <button type="button" data-keys="all">Alle Tonarten</button>
+              </div>
+              <div class="key-groups" id="key-groups"></div>
+            </fieldset>
+            <div class="round-settings">
+              <div>
+                <label for="question-count">Aufgaben</label>
+                <select id="question-count"></select>
+                <label id="custom-count-label" hidden>Eigene Aufgabenanzahl
+                  <input type="number" id="custom-count" min="1" max="1000" step="1" value="5" disabled required>
+                </label>
+              </div>
+              <div>
+                <label for="time-limit">Zeitlimit pro Aufgabe</label>
+                <select id="time-limit"></select>
+                <label id="custom-limit-label" hidden>Eigene Sekunden pro Aufgabe
+                  <input type="number" id="custom-limit" min="1" max="3600" step="1" value="10" disabled required>
+                </label>
+              </div>
+            </div>
+            <button type="submit" id="start-round">Runde starten</button>
+          </form>
+          <div id="round-play" hidden>
+            <h2 id="question-heading" tabindex="-1"></h2>
+            <p id="countdown" role="timer" hidden></p>
+            <div id="notation"></div>
+            <div id="answers" class="answers" aria-label="Antwortoptionen"></div>
+            <p id="feedback" role="status"></p>
+            <button type="button" id="cancel-round">Runde abbrechen</button>
+          </div>
+          <div id="round-result" hidden>
+            <h2 id="result-heading" tabindex="-1">Rundenauswertung</h2>
+            <dl id="result-values"></dl>
+            <button type="button" id="new-round">Neue Runde einrichten</button>
+          </div>
+          <p id="round-status" role="status"></p>
+        </div>
       </section>
       <div class="settings">
         <label for="theme">Darstellung</label>
@@ -34,11 +90,6 @@
           <option value="dark">Dunkel</option>
         </select>
         <p id="storage-status" role="status"></p>
-      </div>
-      <div class="offline">
-        <p id="offline-status" role="status"></p>
-        <button id="check-update" type="button" hidden>Nach Updates suchen</button>
-        <button id="apply-update" type="button" hidden>Update anwenden</button>
       </div>
     </main>
     <script type="module" src="/src/main.ts"></script>

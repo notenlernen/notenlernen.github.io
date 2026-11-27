@@ -6,7 +6,7 @@ Zieladresse [notenlernen.github.io](https://notenlernen.github.io/)
 
 ## Status
 
-Version 0.1.0 legt mit M0 das technische Fundament. Die Startoberfläche verbindet die drei vorgesehenen Trainingsbereiche und die Statistik. Sie speichert die Darstellung (Hell, Dunkel oder System) lokal. Die Navigation weist auf den jeweiligen Folgemeilenstein hin.
+Version 0.2.0 enthält den Notennamentrainer mit 30 Tonarten, Violin- und Bassschlüssel, vier Antwortoptionen, optionalem Zeitlimit und Rundenauswertung. Die Darstellung (Hell, Dunkel oder System) wird lokal gespeichert. Visuelle Intervalle, Gehörtraining und persistente Statistik folgen in späteren Meilensteinen.
 
 ## Lokal entwickeln
 
@@ -54,5 +54,6 @@ Die Installation hängt von Browser und Betriebssystem ab. Chromium-basierte Bro
 - [Architekturentscheidungen und Lizenzstrategie](docs/DECISIONS.md)
 - [Arbeitsauftrag M0](docs/M0.md)
 - [Abnahme und offene Punkte M0](docs/M0-ABNAHME.md)
+- [Abnahme und offene Punkte M1](docs/M1-ABNAHME.md)
 - [Entwicklungsregeln](AGENTS.md)
 - [Changelog](CHANGELOG.md)

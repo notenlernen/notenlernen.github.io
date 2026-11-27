@@ -118,6 +118,10 @@ test('Offline-Neustart in einem neuen Tab', async ({ page, context, deployment }
   await expect(restarted.getByRole('heading', { name: 'Statistik' })).toBeVisible();
   await expect(restarted.getByText(offlineReady)).toBeVisible();
   await expect(restarted.locator('html')).toHaveCSS('line-height', '25.6px');
+  await restarted.getByRole('link', { name: 'Notennamen' }).click();
+  await restarted.getByRole('button', { name: 'Runde starten' }).click();
+  await expect(restarted.getByRole('img', { name: /Lesenote im Violinschlüssel/ })).toBeVisible();
+  expect(await restarted.evaluate(() => document.fonts.check('40px Bravura'))).toBe(true);
 });
 
 test('Update verlangt Zustimmung, übersteht einen Downloadfehler und erhält IndexedDB-Daten', async ({ page, context, deployment }) => {
@@ -136,6 +140,7 @@ test('Update verlangt Zustimmung, übersteht einen Downloadfehler und erhält In
     };
   }));
   await deployment.publishUpdate();
+  await page.bringToFront();
   await page.getByRole('button', { name: 'Nach Updates suchen' }).click();
   const update = page.getByRole('button', { name: 'Update anwenden' });
   await expect(update).toBeVisible();
@@ -197,4 +202,83 @@ test('Manifest und Icons entsprechen der Installationskonfiguration', async ({ p
     const { installabilityErrors } = await session.send('Page.getInstallabilityErrors');
     expect(installabilityErrors).toEqual([]);
   }
+});
+
+test('Notennamentraining mit Bassschlüssel, Tonart und eigener Aufgabenanzahl', async ({ page, deployment }) => {
+  await page.addInitScript(() => { Math.random = () => 0; });
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  await page.goto(deployment.url);
+  const tonarten = page.getByRole('group', { name: 'Tonarten', exact: true });
+  await expect(tonarten.getByRole('checkbox')).toHaveCount(30);
+  await page.getByRole('button', { name: 'Alle Moll', exact: true }).click();
+  await expect(tonarten.getByRole('checkbox', { checked: true })).toHaveCount(15);
+  await page.getByRole('button', { name: 'Bis zwei Vorzeichen' }).click();
+  await expect(tonarten.getByRole('checkbox', { checked: true })).toHaveCount(10);
+  await page.getByRole('button', { name: 'Alle Tonarten', exact: true }).click();
+  await expect(tonarten.getByRole('checkbox', { checked: true })).toHaveCount(30);
+  await page.reload();
+  await tonarten.getByRole('checkbox', { name: 'C-Dur', exact: true }).uncheck();
+  await tonarten.getByRole('checkbox', { name: 'Fis-Dur', exact: true }).check();
+  await page.getByLabel('Notenschlüssel').selectOption('bass');
+  await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
+  await page.getByLabel('Eigene Aufgabenanzahl').fill('1');
+  await page.getByRole('button', { name: 'Runde starten' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Aufgabe 1 von 1' })).toBeFocused();
+  const staff = page.getByRole('img', { name: /Lesenote im Bassschlüssel/ });
+  await expect(staff).toBeVisible();
+  await expect(staff.locator('.vf-clef')).toHaveCount(1);
+  await expect(staff.locator('.vf-keysignature text')).toHaveCount(6);
+  await expect(staff.locator('.vf-stavenote path')).not.toHaveCount(0);
+  const buttons = page.locator('#answers').getByRole('button');
+  await expect(buttons).toHaveCount(4);
+  expect(new Set(await buttons.allTextContents()).size).toBe(4);
+  await page.keyboard.press('Tab');
+  await expect(buttons.first()).toBeFocused();
+  const correct = page.locator('#answers').getByRole('button', { name: 'Es', exact: true });
+  await correct.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Rundenauswertung' })).toBeFocused();
+  await expect(page.getByText('Richtig', { exact: true }).locator('xpath=following-sibling::dd[1]')).toHaveText('1');
+  await expect(page.locator('#result-values dt')).toHaveCount(8);
+  await expect(page.getByText('Zeitüberschreitungen', { exact: true }).locator('xpath=following-sibling::dd[1]')).toHaveText('0');
+  expect(pageErrors).toEqual([]);
+});
+
+test('Zeitüberschreitung wird gewertet und zählt nicht zur Antwortzeit', async ({ page, deployment }) => {
+  await page.goto(deployment.url);
+  await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
+  await page.getByLabel('Eigene Aufgabenanzahl').fill('1');
+  await page.getByLabel('Zeitlimit pro Aufgabe').selectOption('custom');
+  await page.getByLabel('Eigene Sekunden pro Aufgabe').fill('1');
+  await page.getByRole('button', { name: 'Runde starten' }).click();
+  await expect(page.getByRole('timer')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Rundenauswertung' })).toBeVisible();
+  const value = (term) => page.locator('dt', { hasText: term }).locator('xpath=following-sibling::dd[1]');
+  await expect(value('Falsch (inkl. Zeitüberschreitungen)')).toHaveText('1');
+  await expect(page.getByText('Zeitüberschreitungen', { exact: true }).locator('xpath=following-sibling::dd[1]')).toHaveText('1');
+  await expect(value('Mittlere Antwortzeit')).toHaveText('–');
+});
+
+test('Eine offene Runde in einem anderen Tab blockiert bestätigte Updates', async ({ page, context, deployment }) => {
+  await page.goto(deployment.url);
+  await expect(page.getByText(offlineReady)).toBeVisible();
+  const trainer = await context.newPage();
+  await trainer.goto(deployment.url);
+  await trainer.getByRole('button', { name: 'Runde starten' }).click();
+  await expect(trainer.getByRole('heading', { name: 'Aufgabe 1 von 5' })).toBeVisible();
+
+  await deployment.publishUpdate();
+  await page.bringToFront();
+  await page.getByRole('button', { name: 'Nach Updates suchen' }).click();
+  const update = page.getByRole('button', { name: 'Update anwenden' });
+  await update.click();
+  await expect(page.getByText('Updates sind nach Abschluss aller offenen Runden möglich.')).toBeVisible();
+  await expect(page.locator('body')).not.toHaveAttribute('data-test-release', '2');
+  await trainer.getByRole('button', { name: 'Runde abbrechen' }).click();
+  await page.bringToFront();
+  await expect.poll(() => page.evaluate(async () => (await navigator.locks.query()).held.length)).toBe(0);
+  await update.click();
+  await expect(page.locator('body')).toHaveAttribute('data-test-release', '2');
 });

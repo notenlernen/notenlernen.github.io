@@ -1,9 +1,10 @@
 import './style.css';
 import { isTheme, openDatabase, readTheme, writeTheme } from './storage';
 import { setupPwa } from './pwa';
+import './trainer';
 
 const areas = [
-  { id: 'notennamen', title: 'Notennamen', description: 'Das Training für Notennamen folgt in M1.' },
+  { id: 'notennamen', title: 'Notennamen', description: 'Lies die Note und wähle ihren Namen.' },
   { id: 'visuelle-intervalle', title: 'Visuelle Intervalle', description: 'Das Training für visuelle Intervalle folgt in M2.' },
   { id: 'gehoerintervalle', title: 'Gehörintervalle', description: 'Das Gehörtraining folgt in M3.' },
   { id: 'statistik', title: 'Statistik', description: 'Die Trainingsstatistik folgt in M4.' },
@@ -12,10 +13,12 @@ const areas = [
 const heading = document.querySelector<HTMLHeadingElement>('#bereich')!;
 const description = document.querySelector<HTMLParagraphElement>('#beschreibung')!;
 const links = document.querySelectorAll<HTMLAnchorElement>('nav a');
+const trainer = document.querySelector<HTMLElement>('#note-trainer')!;
 
 function renderArea(moveFocus: boolean): void {
   if (location.hash === '#inhalt') return;
   const area = areas.find(({ id }) => location.hash === '#' + id) ?? areas[0];
+  trainer.hidden = area.id !== 'notennamen';
   heading.textContent = area.title;
   description.textContent = area.description;
   for (const link of links) {
@@ -63,5 +66,4 @@ void setupPwa(
   document.querySelector<HTMLElement>('#offline-status')!,
   document.querySelector<HTMLButtonElement>('#check-update')!,
   document.querySelector<HTMLButtonElement>('#apply-update')!,
-  () => true, // M0 hat keine Trainingsrunden. M1 bindet hier den Rundenstatus an.
 );
