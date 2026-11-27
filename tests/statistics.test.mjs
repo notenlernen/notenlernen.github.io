@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import 'fake-indexeddb/auto';
 import { IDBFactory } from 'fake-indexeddb';
 import { exportStatistics, importStatistics } from '../src/backup.ts';
-import { localDate, readStatistics, recordAttempt, recordRound, resetStatistics } from '../src/statistics.ts';
+import { localDate, readAdaptiveProfiles, readStatistics, recordAttempt, recordRound, resetStatistics } from '../src/statistics.ts';
 import { DATABASE_NAME, idb, openDatabase, readTheme, transaction, writeTheme } from '../src/storage.ts';
 
 const today = '2026-11-27';
@@ -19,9 +19,9 @@ async function fresh() {
   return openDatabase();
 }
 
-test('Schema 1 wird atomar erweitert und behält Einstellungen und vorhandene Datensätze', async () => {
+async function seedPreviousSchema(version) {
   globalThis.indexedDB = new IDBFactory();
-  const request = indexedDB.open(DATABASE_NAME, 1);
+  const request = indexedDB.open(DATABASE_NAME, version);
   request.onupgradeneeded = () => {
     const db = request.result;
     db.createObjectStore('settings').put('dark', 'theme');
@@ -30,20 +30,45 @@ test('Schema 1 wird atomar erweitert und behält Einstellungen und vorhandene Da
     attempts.createIndex('byRound', 'roundId');
     attempts.createIndex('bySession', 'sessionId');
     attempts.add({ id: 'legacy', mode: 'notennamen', timestamp: 123, correct: true });
-    db.createObjectStore('roundSummaries', { keyPath: 'id' });
-    db.createObjectStore('adaptiveProfiles', { keyPath: ['mode', 'category'] });
+    const rounds = db.createObjectStore('roundSummaries', { keyPath: 'id' });
+    const profiles = db.createObjectStore('adaptiveProfiles', { keyPath: ['mode', 'category'] });
+    if (version === 2) {
+      for (const store of [attempts, rounds, profiles]) store.createIndex('byMode', 'mode');
+      attempts.add(attempt('old-correct'));
+      attempts.add(attempt('old-timeout', { outcome: 'timeout' }));
+      attempts.add(attempt('old-other-mode', { mode: 'ear', category: '7 Halbtöne' }));
+    }
     db.createObjectStore('resetEpochs', { keyPath: ['mode', 'level'] });
     db.createObjectStore('sessionAggregates', { keyPath: ['mode', 'sessionId'] });
     db.createObjectStore('dayAggregates', { keyPath: ['mode', 'localDate'] });
   };
   const previous = await idb(request);
   previous.close();
+}
+
+test('Schema 1 wird atomar erweitert und behält Einstellungen und vorhandene Datensätze', async () => {
+  await seedPreviousSchema(1);
   const database = await openDatabase();
-  assert.equal(database.version, 2);
+  assert.equal(database.version, 3);
   assert.equal(await readTheme(database), 'dark');
   const old = await transaction(database, ['attempts'], 'readonly', tx =>
     idb(tx.objectStore('attempts').index('byMode').get('notennamen')));
   assert.deepEqual(old, { id: 'legacy', mode: 'notennamen', timestamp: 123, correct: true });
+  database.close();
+});
+
+test('Schema 2 baut adaptive Profile aus M4-Historie auf und hält Modi getrennt', async () => {
+  await seedPreviousSchema(2);
+  const database = await openDatabase();
+  assert.equal(database.version, 3);
+  assert.equal(await readTheme(database), 'dark');
+  assert.deepEqual(await readAdaptiveProfiles(database, 'notes'), [
+    { mode: 'notes', category: 'C', count: 2, correct: 1 },
+  ]);
+  assert.deepEqual(await readAdaptiveProfiles(database, 'ear'), [
+    { mode: 'ear', category: '7 Halbtöne', count: 1, correct: 1 },
+  ]);
+  assert.equal((await readStatistics(database, 'all', session, today)).lifetime.count, 3);
   database.close();
 });
 
@@ -54,9 +79,6 @@ test('Session, Kalendertag und Langzeit bleiben bei Resets und Tageswechsel unab
   const ear = attempt('c', { mode: 'ear', roundId: 'ear-round', interval: '7 Halbtöne' });
   await Promise.all([recordAttempt(db, earlier), recordAttempt(db, timed), recordAttempt(db, timed), recordAttempt(db, ear)]);
   await recordRound(db, { id: 'round', mode: 'notes', duration: 4100, timestamp: timed.timestamp }, 2);
-  await transaction(db, ['adaptiveProfiles'], 'readwrite', async (tx) => {
-    await idb(tx.objectStore('adaptiveProfiles').add({ mode: 'notes', category: 'C', count: 1, correct: 1 }));
-  });
   async function snapshot(filter = 'notes', day = today) {
     return await readStatistics(db, filter, session, day);
   }
@@ -78,6 +100,7 @@ test('Session, Kalendertag und Langzeit bleiben bei Resets und Tageswechsel unab
   assert.equal((await snapshot('ear')).day.count, 1);
   await resetStatistics(db, 'session', 'notes', session, today);
   assert.equal((await snapshot()).session.count, 0);
+  assert.deepEqual(await readAdaptiveProfiles(db, 'notes'), [{ mode: 'notes', category: 'C', count: 2, correct: 1 }]);
   await recordAttempt(db, attempt('d', { roundId: 'round-2' }));
   await resetStatistics(db, 'lifetime', 'notes', session, today);
   stats = await snapshot();
@@ -87,7 +110,7 @@ test('Session, Kalendertag und Langzeit bleiben bei Resets und Tageswechsel unab
   assert.deepEqual(stats.history, []);
   assert.equal(stats.bestRound, null);
   assert.equal((await snapshot('all')).lifetime.count, 1);
-  assert.deepEqual((await exportStatistics(db)).records.adaptiveProfiles, []);
+  assert.deepEqual((await exportStatistics(db)).records.adaptiveProfiles.map(profile => profile.mode), ['ear']);
   db.close();
 });
 
@@ -119,6 +142,11 @@ test('Backup-Export und atomarer Ersatz schützen gelöschte Ebenen und Einstell
   assert.equal(restored.day.count, 0);
   assert.equal(restored.lifetime.count, 1);
   assert.equal(restored.history.length, 1);
+  assert.equal((await readAdaptiveProfiles(db, 'notes'))[0].count, 1);
+  const m4 = JSON.parse(JSON.stringify(backup));
+  m4.records.adaptiveProfiles = [];
+  await importStatistics(db, m4);
+  assert.deepEqual(await readAdaptiveProfiles(db, 'notes'), [{ mode: 'notes', category: 'C', count: 1, correct: 1 }]);
   assert.equal(await readTheme(db), 'dark');
   db.close();
 });

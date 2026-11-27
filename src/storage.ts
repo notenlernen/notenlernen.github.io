@@ -1,5 +1,7 @@
+import { accumulateProfile, isProfileEvidence, type AdaptiveProfile } from './adaptive.ts';
+
 export const DATABASE_NAME = 'notenlernen';
-export const DATABASE_VERSION = 2;
+export const DATABASE_VERSION = 3;
 
 export type Theme = 'system' | 'light' | 'dark';
 
@@ -30,6 +32,21 @@ export function openDatabase(): Promise<IDBDatabase> {
         for (const name of ['attempts', 'roundSummaries', 'adaptiveProfiles']) {
           request.transaction!.objectStore(name).createIndex('byMode', 'mode');
         }
+      }
+      if (event.oldVersion > 0 && event.oldVersion < 3) {
+        const upgrade = request.transaction!;
+        const profiles = upgrade.objectStore('adaptiveProfiles');
+        const totals = new Map<string, AdaptiveProfile>();
+        const scan = upgrade.objectStore('attempts').openCursor();
+        scan.onsuccess = () => {
+          const cursor = scan.result;
+          if (cursor) {
+            if (isProfileEvidence(cursor.value)) accumulateProfile(cursor.value, totals);
+            cursor.continue();
+            return;
+          }
+          for (const profile of totals.values()) profiles.put(profile);
+        };
       }
     };
     request.onblocked = () => {

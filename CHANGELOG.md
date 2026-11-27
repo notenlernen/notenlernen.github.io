@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.6.0 – M5
+
+- Optionale adaptive Auswahl für alle drei Trainingsmodi.
+- Übungsschwerpunkte in der lokalen Statistik.
+- IndexedDB-Schema 3 gewinnt Profile aus vorhandenen Antworten. Resets und ältere Backups berücksichtigen die Profile.
+
 ## 0.5.0 – M4
 
 - Lokale Trainingsstatistik mit Session-, Tages- und Langzeitsummen, Trend, Historie, Bestleistungen und Kategorieauswertung.

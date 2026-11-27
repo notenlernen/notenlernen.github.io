@@ -411,3 +411,42 @@ test('Statistik persistiert, filtert und stellt ein bestätigtes lokales Backup 
   await expect(answersFor('Langzeit')).toHaveText('1');
   await expect(page.getByLabel('Darstellung')).toHaveValue('dark');
 });
+
+test('Adaptiertes Training speichert Übungsschwerpunkte und entfernt sie nur beim Langzeitreset', async ({ page, deployment }) => {
+  await page.addInitScript(() => { Math.random = () => 0.5; });
+  await page.goto(deployment.url);
+  const adaptive = page.getByLabel('Adaptiv trainieren');
+  await expect(adaptive).not.toBeChecked();
+  await adaptive.check();
+  await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
+  await page.getByLabel('Eigene Aufgabenanzahl').fill('3');
+  await page.getByRole('button', { name: 'Runde starten' }).click();
+  for (let number = 1; number <= 3; number++) {
+    await expect(page.getByRole('heading', { name: `Aufgabe ${number} von 3` })).toBeVisible();
+    const wrongAnswer = page.locator('#answers').getByRole('button', { name: /^(?!H$).+/ }).first();
+    await wrongAnswer.click();
+    await expect(page.getByText('Falsch. Richtig ist H.', { exact: true })).toBeVisible();
+  }
+  await expect(page.getByRole('heading', { name: 'Rundenauswertung' })).toBeVisible();
+  await page.getByRole('link', { name: 'Statistik', exact: true }).click();
+  await page.getByText('Übungsschwerpunkte', { exact: true }).click();
+
+  const weak = page.locator('#statistics-weaknesses').getByRole('row', { name: /Notennamen H 3/ });
+  await expect(weak).toBeVisible();
+  await page.getByLabel('Trainingsmodus', { exact: true }).selectOption('ear');
+  await expect(weak).toHaveCount(0);
+  await page.getByLabel('Trainingsmodus', { exact: true }).selectOption('notes');
+  await expect(weak).toBeVisible();
+  await page.getByText('Statistik zurücksetzen', { exact: true }).click();
+  await page.getByLabel('Ebene').selectOption('session');
+  await page.getByRole('button', { name: 'Zurücksetzen …' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Bestätigen' }).click();
+  await expect(page.getByText('Statistik wurde zurückgesetzt.')).toBeVisible();
+  await expect(weak).toBeVisible();
+  await page.getByLabel('Ebene').selectOption('lifetime');
+  await page.getByRole('button', { name: 'Zurücksetzen …' }).click();
+  await dialog.getByRole('checkbox').check();
+  await dialog.getByRole('button', { name: 'Bestätigen' }).click();
+  await expect(weak).toHaveCount(0);
+});

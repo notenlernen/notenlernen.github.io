@@ -8,6 +8,7 @@ const filter = document.querySelector<HTMLSelectElement>('#statistics-mode')!;
 const totals = document.querySelector<HTMLElement>('#statistics-totals')!;
 const trend = document.querySelector<HTMLElement>('#statistics-trend')!;
 const history = document.querySelector<HTMLElement>('#statistics-history')!;
+const weaknesses = document.querySelector<HTMLElement>('#statistics-weaknesses')!;
 const errors = document.querySelector<HTMLElement>('#statistics-errors')!;
 const status = document.querySelector<HTMLElement>('#statistics-status')!;
 const level = document.querySelector<HTMLSelectElement>('#statistics-reset-level')!;
@@ -82,6 +83,14 @@ async function refresh(): Promise<void> {
       const best = document.createElement('p');
       best.textContent = `Beste Rundenquote: ${rate(stats.bestRound.totals)}. Schnellste richtige Antwort: ${formatTime(stats.lifetime.fastestCorrect)}.`;
       history.prepend(best);
+    }
+    if (stats.weaknesses.length) {
+      showTable(weaknesses, ['Modus', 'Kategorie', 'Antworten', 'Fehlerquote'], stats.weaknesses.map(profile =>
+        [modeLabels[profile.mode], profile.category, String(profile.count), percent.format(1 - profile.correct / profile.count)]));
+    } else {
+      const empty = document.createElement('p');
+      empty.textContent = 'Übungsschwerpunkte erscheinen ab drei Antworten mit mindestens einem Fehler pro Kategorie.';
+      weaknesses.replaceChildren(empty);
     }
     showTable(errors, ['Kategorie', 'Antworten', 'Fehler', 'Fehlerquote'], stats.breakdown.map(row =>
       [row.name, String(row.count), String(row.errors), percent.format(row.errors / row.count)]));

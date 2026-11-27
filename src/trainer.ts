@@ -8,8 +8,9 @@ import { generateEarQuestion, type EarQuestion } from './ear';
 import { playPiano, stopPiano } from './piano';
 
 import { getDatabase } from './storage';
-import { createRoundId, localDate, recordAttempt, recordRound, sessionId, type TrainingMode } from './statistics';
+import { createRoundId, localDate, readAdaptiveProfiles, recordAttempt, recordRound, sessionId, type TrainingMode } from './statistics';
 import { statisticsChanged } from './statistics-ui';
+import { advanceProfile, chooseAdaptiveQuestion, type AdaptiveProfile } from './adaptive';
 
 const trainer = document.querySelector<HTMLElement>('#training-round')!;
 const clefSettings = document.querySelector<HTMLElement>('#clef-settings')!;
@@ -22,6 +23,7 @@ const intervalSettings = document.querySelector<HTMLElement>('#interval-settings
 const intervalMode = document.querySelector<HTMLSelectElement>('#interval-mode')!;
 const intervalDirection = document.querySelector<HTMLSelectElement>('#interval-direction')!;
 const setup = document.querySelector<HTMLFormElement>('#round-setup')!;
+const adaptiveTraining = document.querySelector<HTMLInputElement>('#adaptive-training')!;
 const start = document.querySelector<HTMLButtonElement>('#start-round')!;
 const groups = document.querySelector<HTMLElement>('#key-groups')!;
 const clefs = document.querySelector<HTMLSelectElement>('#clefs')!;
@@ -83,7 +85,9 @@ let round: Round | undefined;
 let roundId: string;
 let saving: Promise<void> = Promise.resolve();
 let saveFailed = false;
-let question: Question | IntervalQuestion | EarQuestion;
+type TrainingQuestion = Question | IntervalQuestion | EarQuestion;
+let question: TrainingQuestion;
+let adaptiveProfiles: Map<string, AdaptiveProfile> | undefined;
 let heard = false;
 let displayedMode: TrainingMode | undefined;
 let roundMode: TrainingMode | undefined;
@@ -169,19 +173,25 @@ function reportSaveFailure(id: string): void {
   status.textContent = 'Ein Teil dieser Runde konnte nicht dauerhaft gespeichert werden.';
 }
 
+function questionCategory(current: TrainingQuestion): string {
+  if ('note' in current) return current.correct;
+  if ('notes' in current) return `Nr. ${current.interval.number}`;
+  return `${Math.abs(current.pitches[1] - current.pitches[0])} Halbtöne`;
+}
+
 function saveAnswer(attempt: Round['attempts'][number]): void {
   const id = roundId;
   const timestamp = Date.now();
   const note = 'note' in question ? question : undefined;
   const score = 'notes' in question ? question : undefined;
-  const interval = score ? `Nr. ${score.interval.number}`
-    : 'pitches' in question ? `${Math.abs(question.pitches[1] - question.pitches[0])} Halbtöne` : undefined;
+  const category = questionCategory(question);
   const entry = {
     id: `${id}:${round!.attempts.length}`, roundId: id, sessionId: sessionId(), mode: roundMode!,
     timestamp, localDate: localDate(timestamp),
-    category: note ? note.correct : interval!, key: note?.key.label ?? score?.key.label,
-    clef: note?.clef ?? score?.clef, interval, ...attempt,
+    category, key: note?.key.label ?? score?.key.label,
+    clef: note?.clef ?? score?.clef, interval: note ? undefined : category, ...attempt,
   };
+  if (adaptiveProfiles) adaptiveProfiles.set(category, advanceProfile(entry, adaptiveProfiles.get(category)));
   saving = saving.then(async () => {
     await recordAttempt(await getDatabase(), entry);
     statisticsChanged();
@@ -254,9 +264,10 @@ playInterval.addEventListener('click', async () => {
 function showQuestion(): void {
   if (!round) return;
   const ear = roundMode === 'ear';
-  question = ear ? generateEarQuestion(directions, intervalLevel)
+  const generate = () => ear ? generateEarQuestion(directions, intervalLevel)
     : roundMode === 'intervals' ? generateIntervalQuestion(selectedKeys, selectedClefs, directions, intervalLevel)
     : generateQuestion(selectedKeys, selectedClefs);
+  question = adaptiveProfiles ? chooseAdaptiveQuestion(generate, questionCategory, adaptiveProfiles) : generate();
   heading.textContent = `Aufgabe ${round.attempts.length + 1} von ${round.total}`;
   feedback.textContent = '';
   notation.hidden = ear;
@@ -287,6 +298,7 @@ setup.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (start.disabled || !displayedMode) return;
   const requestedMode = displayedMode;
+  const adaptive = adaptiveTraining.checked;
   selectedKeys = keys.filter(({ id }) => keyInputs.get(id)!.checked);
   if (requestedMode !== 'ear' && !selectedKeys.length) {
     status.textContent = 'Bitte mindestens eine Tonart wählen.';
@@ -309,6 +321,15 @@ setup.addEventListener('submit', async (event) => {
     if (!releaseRound) {
       status.textContent = 'Bitte warte, bis das Update abgeschlossen ist.';
       return;
+    }
+    adaptiveProfiles = undefined;
+    if (adaptive) {
+      try {
+        const profiles = await readAdaptiveProfiles(await getDatabase(), requestedMode);
+        adaptiveProfiles = new Map(profiles.map(profile => [profile.category, profile]));
+      } catch {
+        status.textContent = 'Das Übungsprofil ist nicht verfügbar. Die Runde verwendet die Standardauswahl.';
+      }
     }
     resultMode = undefined;
     roundId = createRoundId();

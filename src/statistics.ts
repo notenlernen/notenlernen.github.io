@@ -1,8 +1,10 @@
 import { idb, transaction } from './storage.ts';
 import type { Outcome } from './round.ts';
 
-export const trainingModes = ['notes', 'intervals', 'ear'] as const;
-export type TrainingMode = typeof trainingModes[number];
+import { advanceProfile, isAdaptiveProfile, trainingModes, weaknesses, type AdaptiveProfile, type TrainingMode } from './adaptive.ts';
+
+export { trainingModes };
+export type { TrainingMode };
 export type ModeFilter = TrainingMode | 'all';
 export type ResetLevel = 'session' | 'day' | 'lifetime' | 'all';
 
@@ -99,17 +101,20 @@ function combine(left: Totals, right: Totals): Totals {
 }
 
 export async function recordAttempt(database: IDBDatabase, attempt: Attempt): Promise<void> {
-  await transaction(database, ['attempts', ...scopes], 'readwrite', async (tx) => {
+  await transaction(database, ['attempts', 'adaptiveProfiles', ...scopes], 'readwrite', async (tx) => {
     const attempts = tx.objectStore('attempts');
     if (await idb(attempts.getKey(attempt.id)) !== undefined) return;
     const session = tx.objectStore('sessionAggregates');
     const day = tx.objectStore('dayAggregates');
-    const [priorSession, priorDay] = await Promise.all([
+    const profiles = tx.objectStore('adaptiveProfiles');
+    const [priorSession, priorDay, priorProfile] = await Promise.all([
       idb(session.get([attempt.mode, attempt.sessionId])),
       idb(day.get([attempt.mode, attempt.localDate])),
+      idb(profiles.get([attempt.mode, attempt.category])),
     ]);
     await Promise.all([
       idb(attempts.add(attempt)),
+      idb(profiles.put(advanceProfile(attempt, priorProfile && isAdaptiveProfile(priorProfile) ? priorProfile : undefined))),
       idb(session.put({ mode: attempt.mode, sessionId: attempt.sessionId, totals: addResult(priorSession?.totals ?? zero, attempt) })),
       idb(day.put({ mode: attempt.mode, localDate: attempt.localDate, totals: addResult(priorDay?.totals ?? zero, attempt) })),
     ]);
@@ -156,12 +161,20 @@ function modeQuery(store: IDBObjectStore, filter: ModeFilter): IDBRequest {
   return filter === 'all' ? store.getAll() : store.index('byMode').getAll(filter);
 }
 
+export async function readAdaptiveProfiles(database: IDBDatabase, mode: TrainingMode): Promise<AdaptiveProfile[]> {
+  return transaction(database, ['adaptiveProfiles'], 'readonly', async (tx) => {
+    const rows: AdaptiveProfile[] = await idb(tx.objectStore('adaptiveProfiles').index('byMode').getAll(mode));
+    return rows.filter(isAdaptiveProfile);
+  });
+}
+
 export async function readStatistics(database: IDBDatabase, filter: ModeFilter, session: string, day: string) {
   const modes = filter === 'all' ? trainingModes : [filter];
-  return transaction(database, ['attempts', 'roundSummaries', ...scopes], 'readonly', async (tx) => {
-    const [attempts, rounds, ...aggregates] = await Promise.all([
+  return transaction(database, ['attempts', 'roundSummaries', 'adaptiveProfiles', ...scopes], 'readonly', async (tx) => {
+    const [attempts, rounds, profiles, ...aggregates] = await Promise.all([
       idb(modeQuery(tx.objectStore('attempts'), filter)) as Promise<Attempt[]>,
       idb(modeQuery(tx.objectStore('roundSummaries'), filter)) as Promise<RoundRecord[]>,
+      idb(modeQuery(tx.objectStore('adaptiveProfiles'), filter)) as Promise<AdaptiveProfile[]>,
       ...scopes.flatMap((name, index) =>
         modes.map(mode => idb(tx.objectStore(name).get([mode, index === 0 ? session : day])))),
     ]);
@@ -195,6 +208,7 @@ export async function readStatistics(database: IDBDatabase, filter: ModeFilter, 
       day: aggregates.slice(modes.length).map(row => row?.totals ?? zero).reduce(combine, zero),
       lifetime: summarizeAttempts(valid),
       trend: daily,
+      weaknesses: weaknesses(profiles.filter(isAdaptiveProfile)).slice(0, 12),
       breakdown: [...breakdown.values()].sort((a, b) => b.errors - a.errors || a.name.localeCompare(b.name, 'de')),
       history: history.slice(0, 20),
       bestRound: history.reduce<RoundRecord | null>((best, round) =>
