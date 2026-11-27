@@ -30,3 +30,7 @@ IndexedDB-Schema 2 ergänzt Modusindizes für Versuche, Runden und adaptive Prof
 ## Implementierter Stand M5
 
 `src/adaptive.ts` bildet je Modus und Kategorie Antwortzähler und gewichtet einen begrenzten Satz gültiger Fragen aus den bestehenden Generatoren. IndexedDB-Schema 3 erzeugt die initialen Profile aus der vorhandenen Historie. Danach werden Profile, Versuche und Session-/Tagesaggregate atomar aktualisiert. Die Backupversion bleibt kompatibel. Fehlende Profile älterer Backups werden beim Import aus enthaltenen Antworten rekonstruiert.
+
+## Implementierter Stand M6
+
+Die Sprachwahl ändert die Anzeige von Texten und Notenbezeichnungen. Musikmodell, Antwortwertung und gespeicherte Schlüssel behalten ihr bisheriges Format. Der visuelle Trainer lädt den Notensatz als eigenes Modul. Der Service Worker speichert dieses Modul mit den übrigen Offline-Dateien. Nach einem bestätigten Wechsel des Service Workers laden kontrollierte Tabs ohne aktive Runde ihre Oberfläche neu.

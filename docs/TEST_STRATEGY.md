@@ -24,3 +24,7 @@ Die Integration prüft die Migration von Schema 1, atomare Speicherung, Modus- u
 ## Umsetzung in M5
 
 Tests mit festem Zufallsstartwert prüfen reproduzierbare Gewichtung und die unveränderte Gültigkeit der erzeugten Fragen. Die Integration deckt Schema 2, ältere Backups und getrennte Resets ab. Die Browser-Matrix übt das Aktivieren eines adaptiven Trainings und den sichtbaren Statistikfluss. [M5-Abnahmeprotokoll](M5-ABNAHME.md)
+
+## Umsetzung in M6
+
+Die Browsertests prüfen zusätzlich Sprachwahl, Offline-Verfügbarkeit verzögert geladener Ressourcen und lokale Webanfragen. Axe prüft Einrichtung, Runde und Statistik in Chromium und WebKit. Die Abnahme weist die getrennte grafische Linux-Installation und fehlende physische Geräte ausdrücklich aus. [M6-Abnahmeprotokoll](M6-ABNAHME.md)

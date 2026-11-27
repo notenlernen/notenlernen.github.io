@@ -1,5 +1,7 @@
 import { Accidental, Formatter, Renderer, Stave, StaveNote } from 'vexflow/bravura';
 import type { AccidentalMark, Clef, Note, Question } from './music';
+import { t } from './language';
+import { clefLabel, keyLabel } from './music-labels';
 import type { IntervalQuestion } from './intervals';
 
 export async function prepareNotation(): Promise<void> {
@@ -21,7 +23,7 @@ export function drawQuestion(container: HTMLDivElement, question: Question | Int
   const svg = container.querySelector('svg')!;
   svg.setAttribute('viewBox', '0 0 350 146');
   svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', `${'notes' in question ? 'Zwei Noten' : 'Lesenote'} im ${question.clef === 'treble' ? 'Violinschlüssel' : 'Bassschlüssel'}, ${question.key.label}`);
+  svg.setAttribute('aria-label', `${'notes' in question ? t('Zwei Noten', 'Two notes') : t('Lesenote', 'Note')} ${t('im', 'in')} ${clefLabel(question.clef)}, ${keyLabel(question.key)}`);
 }
 
 function staveNote(note: Note, clef: Clef, accidental: AccidentalMark, duration: string): StaveNote {

@@ -1,3 +1,4 @@
+import { t } from './language';
 import { beforeUpdate } from './round-lock';
 
 async function latestWorker(): Promise<string> {
@@ -16,20 +17,21 @@ export async function setupPwa(
   apply: HTMLButtonElement,
 ): Promise<void> {
   if (!import.meta.env.PROD || !('serviceWorker' in navigator)) {
-    status.textContent = 'Der Offline-Modus ist hier nicht verfügbar.';
+    status.textContent = t('Der Offline-Modus ist hier nicht verfügbar.', 'Offline mode is unavailable here.');
     return;
   }
 
   const workers = navigator.serviceWorker;
+  let previousController = workers.controller?.scriptURL;
   let available: string | undefined;
   let activating: string | undefined;
   let releaseUpdate: (() => void) | undefined;
 
   const showStatus = () => {
     apply.hidden = !available || available === workers.controller?.scriptURL;
-    status.textContent = !apply.hidden ? 'Ein Update ist verfügbar.'
-      : workers.controller ? 'Diese App-Shell ist offline verfügbar. Die Klaviersamples sind gespeichert.'
-      : 'Offline-Download wird vorbereitet.';
+    status.textContent = !apply.hidden ? t('Ein Update ist verfügbar.', 'An update is available.')
+      : workers.controller ? t('Diese App-Shell ist offline verfügbar. Die Klaviersamples sind gespeichert.', 'The app and piano samples are available offline.')
+      : t('Offline-Download wird vorbereitet.', 'Preparing offline download.');
   };
 
   const inspectVersion = async (interactive: boolean) => {
@@ -44,7 +46,7 @@ export async function setupPwa(
       }
       await register(latest);
     } catch {
-      if (interactive || !workers.controller) status.textContent = 'Die aktuelle App-Version ist derzeit nicht abrufbar.';
+      if (interactive || !workers.controller) status.textContent = t('Die aktuelle App-Version ist derzeit nicht abrufbar.', 'The latest app version is currently unavailable.');
     } finally {
       check.disabled = false;
     }
@@ -55,7 +57,7 @@ export async function setupPwa(
     releaseUpdate?.();
     releaseUpdate = undefined;
     apply.disabled = false;
-    status.textContent = 'Der Offline-Download konnte nicht abgeschlossen werden. Bitte erneut versuchen.';
+    status.textContent = t('Der Offline-Download konnte nicht abgeschlossen werden. Bitte erneut versuchen.', 'The offline download failed. Try again.');
   };
 
   async function register(url: string): Promise<void> {
@@ -78,10 +80,14 @@ export async function setupPwa(
   }
 
   workers.addEventListener('controllerchange', () => {
-    if (activating && activating === workers.controller?.scriptURL) {
+    const controller = workers.controller?.scriptURL;
+    if (controller && (activating === controller || previousController && previousController !== controller)) {
       releaseUpdate?.();
       location.reload();
-    } else showStatus();
+      return;
+    }
+    previousController = controller;
+    showStatus();
   });
   check.addEventListener('click', () => void inspectVersion(true));
   apply.addEventListener('click', async () => {
@@ -97,13 +103,13 @@ export async function setupPwa(
         }
         activating = url;
         releaseUpdate = resolve;
-        status.textContent = 'Update wird angewendet.';
+        status.textContent = t('Update wird angewendet.', 'Applying update.');
         void register(url);
       }));
       if (!accepted) {
         status.textContent = navigator.locks
-          ? 'Updates sind nach Abschluss aller offenen Runden möglich.'
-          : 'Sichere Updates werden von diesem Browser nicht unterstützt.';
+          ? t('Updates sind nach Abschluss aller offenen Runden möglich.', 'Updates are available once all active rounds have ended.')
+          : t('Sichere Updates werden von diesem Browser nicht unterstützt.', 'This browser does not support safe updates.');
       }
     } catch {
       installationFailed();

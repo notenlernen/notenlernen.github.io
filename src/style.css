@@ -30,6 +30,7 @@
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--surface); color: var(--ink); }
+a { color: var(--accent); }
 .shell { width: min(100% - 2rem, 65rem); margin-inline: auto; }
 header { padding-block: 1.25rem; }
 .brand { font-weight: 750; font-size: 1.25rem; margin: 0 0 .75rem; }
@@ -53,7 +54,7 @@ section { background: var(--panel); border-radius: 1rem; padding: clamp(1rem, 4v
 h1 { font-size: clamp(1.6rem, 5vw, 3rem); line-height: 1.15; margin: 0; overflow-wrap: anywhere; }
 section p { margin-bottom: 0; }
 .settings, .offline { margin-block: 1.25rem; }
-[hidden] { display: none; }
+[hidden] { display: none !important; }
 
 #round-setup, #round-play, #round-result { margin-top: 1.25rem; }
 fieldset { border: 1px solid var(--line); border-radius: .5rem; margin: .8rem 0; min-inline-size: 0; }
@@ -87,3 +88,8 @@ input[type="number"] { max-width: 7rem; min-height: 44px; font: inherit; }
 }
 #statistics-confirm::backdrop { background: #1018129c; }
 .confirmation-buttons { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+
+#language-link { display: inline-block; margin-top: .7rem; padding: .35rem .25rem; min-height: 44px; }
+footer { padding-block: 1rem 2rem; }
+#round-setup input[type="checkbox"], #statistics-confirm input[type="checkbox"] { accent-color: var(--accent); }
+#adaptive-training { margin-block: .75rem; }

@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { execFile } from 'node:child_process';
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -282,6 +283,7 @@ test('Eine offene Runde in einem anderen Tab blockiert bestätigte Updates', asy
   await expect.poll(() => page.evaluate(async () => (await navigator.locks.query()).held.length)).toBe(0);
   await update.click();
   await expect(page.locator('body')).toHaveAttribute('data-test-release', '2');
+  await expect(trainer.locator('body')).toHaveAttribute('data-test-release', '2');
 });
 
 test('Visuelle Intervalle in beiden Modi und Wechsel bei aktiver Runde', async ({ page, deployment }) => {
@@ -449,4 +451,72 @@ test('Adaptiertes Training speichert Übungsschwerpunkte und entfernt sie nur be
   await dialog.getByRole('checkbox').check();
   await dialog.getByRole('button', { name: 'Bestätigen' }).click();
   await expect(weak).toHaveCount(0);
+});
+
+test('Englisch übersetzt Noten, Intervalle und Statistik bei unveränderten Trainingsdaten', async ({ page, deployment }) => {
+  await page.addInitScript(() => { Math.random = () => 0.5; });
+  await page.goto(deployment.url);
+  await page.getByRole('link', { name: 'English' }).click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.getByRole('heading', { name: 'Note names' })).toBeVisible();
+  await expect(page.getByLabel('Direction')).toBeHidden();
+  await expect(page.getByRole('checkbox', { name: 'B♭ major' })).toBeVisible();
+  await page.getByLabel('Questions', { exact: true }).selectOption('custom');
+  await page.getByLabel('Custom question count').fill('1');
+  await page.getByRole('button', { name: 'Start round' }).click();
+  const note = page.getByRole('img', { name: 'Note in treble clef, C major' });
+  await expect(note).toBeVisible();
+  await page.getByRole('button', { name: 'B', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Round results' })).toBeVisible();
+  await expect(page.locator('#result-values').getByText('Correct', { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Statistics' }).click();
+  await expect(page.getByRole('row', { name: /^Long term 1 1 0 0/ })).toBeVisible();
+  await page.getByRole('link', { name: 'Visual intervals' }).click();
+  await expect(page.getByLabel('Direction')).toBeVisible();
+  await page.getByRole('link', { name: 'Privacy and licenses' }).click();
+  await expect(page.getByRole('heading', { name: 'Privacy and licenses', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Back to Notenlernen' }).click();
+  await page.goto(deployment.url);
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+});
+
+test('App lädt Notensatz erst bei Bedarf und verwendet ausschließlich lokale Ressourcen', async ({ page, deployment }) => {
+  const external = [];
+  const notationRequests = [];
+  const localOrigin = new URL(deployment.url).origin;
+  page.context().on('request', request => {
+    if (/^https?:/.test(request.url()) && new URL(request.url()).origin !== localOrigin) external.push(request.url());
+  });
+  page.on('request', request => {
+    if (/\/assets\/notation-[^/]+\.js$/.test(request.url())) notationRequests.push(request.url());
+  });
+  await page.goto(deployment.url);
+  await expect(page.getByText(offlineReady)).toBeVisible();
+  expect(notationRequests).toHaveLength(0);
+  const entry = await page.locator('script[type="module"][src]').getAttribute('src');
+  const script = await page.request.get(new URL(entry, deployment.url).href);
+  expect((await script.body()).byteLength).toBeLessThan(65 * 1024);
+  await page.getByRole('button', { name: 'Runde starten' }).click();
+  await expect(page.getByRole('img', { name: /Lesenote im Violinschlüssel/ })).toBeVisible();
+  expect(notationRequests).toHaveLength(1);
+  expect(external).toEqual([]);
+});
+
+test('Barrierefreiheitsprüfung für Einstellungen, Rundendialog und Statistik', async ({ page, deployment, browserName }) => {
+  test.skip(browserName === 'firefox', 'Axe causes the Firefox page to crash in the headless test environment.');
+  await page.goto(deployment.url);
+  const audit = async () => {
+    const results = await new AxeBuilder({ page }).setLegacyMode().withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+    expect(results.violations.map(({ id, nodes }) => ({ id, nodes: nodes.map(node => node.target) }))).toEqual([]);
+  };
+  await expect(page.getByRole('button', { name: 'Runde starten' })).toBeVisible();
+  await audit();
+  await page.getByLabel('Darstellung').selectOption('dark');
+  await page.getByRole('button', { name: 'Runde starten' }).click();
+  await expect(page.getByRole('heading', { name: 'Aufgabe 1 von 5' })).toBeFocused();
+  await audit();
+  await page.getByRole('button', { name: 'Runde abbrechen' }).click();
+  await page.getByRole('link', { name: 'Statistik', exact: true }).click();
+  await expect(page.getByRole('table').first()).toBeVisible();
+  await audit();
 });
