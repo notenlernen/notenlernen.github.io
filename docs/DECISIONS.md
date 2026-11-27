@@ -24,4 +24,4 @@
 ## Konkretisierung für M2
 
 - ADR-013: Intervallfragen erzeugen zwei notierte Einzelnoten innerhalb eines Takts. Die Position auf dem System und die klingende Tonhöhe bleiben getrennt. Prime und enharmonische Grenzfälle folgen ihrer Schreibweise.
-- ADR-014: Solange M1 offen ist, basiert der M2-PR auf dessen Feature-Branch. Beide Zielbranches führen die Prüfpipeline aus. Nur Pushes auf `main` können veröffentlichen.
+- ADR-014: Der M2-PR basierte während der Entwicklung auf dem offenen M1-Branch. Nach dem M1-Merge wurde er auf `main` umgestellt. Die Prüfpipeline läuft für PRs gegen `main`. Nur Pushes auf `main` können veröffentlichen.

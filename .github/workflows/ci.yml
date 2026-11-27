@@ -2,7 +2,7 @@ name: CI und Pages
 
 on:
   pull_request:
-    branches: [main, feature/m1-note-name-trainer]
+    branches: [main]
   push:
     branches: [main]
 
