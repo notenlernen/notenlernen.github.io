@@ -26,6 +26,11 @@ const intervalMode = document.querySelector<HTMLSelectElement>('#interval-mode')
 const intervalDirection = document.querySelector<HTMLSelectElement>('#interval-direction')!;
 const setup = document.querySelector<HTMLFormElement>('#round-setup')!;
 const adaptiveTraining = document.querySelector<HTMLInputElement>('#adaptive-training')!;
+const options = document.querySelector<HTMLDetailsElement>('#round-options')!;
+const plan = document.querySelector<HTMLElement>('#round-plan')!;
+const manualNext = document.querySelector<HTMLInputElement>('#manual-next')!;
+const nextQuestion = document.querySelector<HTMLButtonElement>('#next-question')!;
+const progress = document.querySelector<HTMLProgressElement>('#round-progress')!;
 const start = document.querySelector<HTMLButtonElement>('#start-round')!;
 const groups = document.querySelector<HTMLElement>('#key-groups')!;
 const clefs = document.querySelector<HTMLSelectElement>('#clefs')!;
@@ -83,6 +88,20 @@ function toggleCustom(select: HTMLSelectElement, input: HTMLInputElement): void 
 count.addEventListener('change', () => toggleCustom(count, customCount));
 limit.addEventListener('change', () => toggleCustom(limit, customLimit));
 
+function updatePlan(): void {
+  const total = count.value === 'custom' ? customCount.valueAsNumber : Number(count.value);
+  const seconds = limit.value === 'custom' ? customLimit.valueAsNumber : Number(limit.value);
+  const questions = Number.isFinite(total) ? t(`${total} Aufgaben`, `${total} questions`) : t('Eigene Aufgabenzahl', 'Custom question count');
+  const time = limit.value === 'none' ? t('ohne Zeitlimit', 'no time limit')
+    : Number.isFinite(seconds) ? t(`${seconds} s pro Aufgabe`, `${seconds} s per question`) : t('eigenes Zeitlimit', 'custom time limit');
+  plan.textContent = `${questions} · ${time}`;
+}
+setup.addEventListener('input', updatePlan);
+setup.addEventListener('invalid', (event) => {
+  if (event.target instanceof HTMLElement && options.contains(event.target)) options.open = true;
+}, true);
+updatePlan();
+
 let round: Round | undefined;
 let roundId: string;
 let saving: Promise<void> = Promise.resolve();
@@ -102,6 +121,8 @@ let selectedClefs: Clef[] = [];
 let releaseRound: (() => void) | undefined;
 let timer: number | undefined;
 let feedbackTimer: number | undefined;
+let manualAdvance = false;
+let answerEndedAt: number | undefined;
 const formatNumber = new Intl.NumberFormat(language, { maximumFractionDigits: 2 });
 const seconds = (time: number | null) => time === null ? '–' : `${formatNumber.format(time / 1000)} s`;
 
@@ -123,6 +144,7 @@ function release(): void {
   stopPiano();
   window.clearInterval(timer);
   window.clearTimeout(feedbackTimer);
+  answerEndedAt = undefined;
   round = undefined;
   roundMode = undefined;
   const unlock = releaseRound;
@@ -214,13 +236,29 @@ function submitAnswer(correct: boolean | null): void {
     button.setAttribute('aria-disabled', 'true');
     if (button.dataset.answer === question.correct) button.dataset.correct = 'true';
   }
+  feedback.dataset.outcome = outcome;
+  progress.value = round!.attempts.length;
   feedback.textContent = outcome === 'correct' ? t('Richtig.', 'Correct.')
     : `${outcome === 'timeout' ? t('Zeit abgelaufen.', 'Time is up.') : t('Falsch.', 'Incorrect.')} ${t('Richtig ist', 'Answer:')} ${answerLabel(question.correct, 'note' in question)}.`;
-  feedbackTimer = window.setTimeout(() => {
-    if (round?.complete) finish(now);
-    else showQuestion();
-  }, 1250);
+  answerEndedAt = now;
+  if (manualAdvance) {
+    nextQuestion.textContent = round!.complete ? t('Ergebnis zeigen', 'Show results') : t('Weiter', 'Next');
+    nextQuestion.hidden = false;
+    if (!trainer.hidden) nextQuestion.focus();
+  } else {
+    feedbackTimer = window.setTimeout(advanceQuestion, 1250);
+  }
 }
+
+function advanceQuestion(): void {
+  const endedAt = answerEndedAt;
+  if (!round || endedAt === undefined) return;
+  answerEndedAt = undefined;
+  if (round.complete) finish(endedAt);
+  else showQuestion();
+}
+
+nextQuestion.addEventListener('click', advanceQuestion);
 
 function tick(): void {
   const remaining = round?.remaining(performance.now());
@@ -273,6 +311,10 @@ function showQuestion(): void {
   question = adaptiveProfiles ? chooseAdaptiveQuestion(generate, questionCategory, adaptiveProfiles) : generate();
   heading.textContent = t(`Aufgabe ${round.attempts.length + 1} von ${round.total}`, `Question ${round.attempts.length + 1} of ${round.total}`);
   feedback.textContent = '';
+  delete feedback.dataset.outcome;
+  nextQuestion.hidden = true;
+  progress.max = round.total;
+  progress.value = round.attempts.length;
   notation.hidden = ear;
   earPlayback.hidden = !ear;
   heard = false;
@@ -303,9 +345,11 @@ setup.addEventListener('submit', async (event) => {
   if (start.disabled || !displayedMode) return;
   const requestedMode = displayedMode;
   const adaptive = adaptiveTraining.checked;
+  const useNext = manualNext.checked;
   selectedKeys = keys.filter(({ id }) => keyInputs.get(id)!.checked);
   if (requestedMode !== 'ear' && !selectedKeys.length) {
     status.textContent = t('Bitte mindestens eine Tonart wählen.', 'Choose at least one key.');
+    options.open = true;
     keyInputs.get('C')!.focus();
     return;
   }
@@ -342,6 +386,7 @@ setup.addEventListener('submit', async (event) => {
     roundId = createRoundId();
     saveFailed = false;
     roundMode = requestedMode;
+    manualAdvance = useNext;
     round = new Round(total, limitMs, performance.now());
     document.dispatchEvent(new Event('training-state-changed'));
     showQuestion();

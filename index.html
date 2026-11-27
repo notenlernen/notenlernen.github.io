@@ -13,96 +13,106 @@
   <body>
     <a class="skip" href="#inhalt" data-en="Skip to content">Zum Inhalt</a>
     <header class="shell">
-      <p class="brand">Notenlernen</p>
+      <div class="header-line">
+        <p class="brand"><img src="/icons/icon-192.png" alt="" width="40" height="40"> Notenlernen</p>
+        <a id="language-link" href="/?lang=en" lang="en" hreflang="en">English</a>
+      </div>
       <nav aria-label="Bereiche" data-en-aria="Sections">
         <a href="#notennamen" data-en="Note names">Notennamen</a>
         <a href="#visuelle-intervalle" data-en="Visual intervals">Visuelle Intervalle</a>
         <a href="#gehoerintervalle" data-en="Ear training">Gehörintervalle</a>
         <a href="#statistik" data-en="Statistics">Statistik</a>
       </nav>
-      <a id="language-link" href="/?lang=en" lang="en" hreflang="en">English</a>
     </header>
     <main id="inhalt" class="shell" tabindex="-1">
-      <div class="offline">
-        <p id="offline-status" role="status"></p>
-        <button id="check-update" type="button" hidden data-en="Check for updates">Nach Updates suchen</button>
-        <button id="apply-update" type="button" hidden data-en="Apply update">Update anwenden</button>
-      </div>
       <section aria-labelledby="bereich">
         <h1 id="bereich" tabindex="-1" data-en="Note names">Notennamen</h1>
-        <p id="beschreibung" data-en="Read the note and choose its name.">Lies die Note und wähle ihren Namen.</p>
+        <p id="beschreibung" data-en="Which note do you see?">Welche Note siehst du?</p>
         <div id="training-round">
           <form id="round-setup">
-            <div id="clef-settings">
-              <label for="clefs" data-en="Clef">Notenschlüssel</label>
-              <select id="clefs">
-                <option value="treble" data-en="Treble clef">Violinschlüssel</option>
-                <option value="bass" data-en="Bass clef">Bassschlüssel</option>
-                <option value="mixed" data-en="Treble and bass clefs">Violin- und Bassschlüssel</option>
-              </select>
+            <div class="quick-start">
+              <button type="submit" id="start-round" class="primary" aria-describedby="round-plan" data-en="Start round">Runde starten</button>
+              <p id="round-plan"></p>
             </div>
-            <div id="interval-settings" class="round-settings" hidden>
-              <div>
-                <label for="interval-mode" data-en="Answer type">Gefragte Eigenschaft</label>
-                <select id="interval-mode">
-                  <option value="number" data-en="Interval number">Intervallzahl</option>
-                  <option value="quality" data-en="Interval number and quality">Intervallzahl und Qualität</option>
-                </select>
+            <details id="round-options">
+              <summary data-en="Change round settings">Übung einstellen</summary>
+              <div class="option-content">
+                <div id="clef-settings">
+                  <label for="clefs" data-en="Clef">Notenschlüssel</label>
+                  <select id="clefs">
+                    <option value="treble" data-en="Treble clef">Violinschlüssel</option>
+                    <option value="bass" data-en="Bass clef">Bassschlüssel</option>
+                    <option value="mixed" data-en="Treble and bass clefs">Violin- und Bassschlüssel</option>
+                  </select>
+                </div>
+                <div id="interval-settings" class="round-settings" hidden>
+                  <div>
+                    <label for="interval-mode" data-en="Answer type">Gefragte Eigenschaft</label>
+                    <select id="interval-mode">
+                      <option value="number" data-en="Interval number">Intervallzahl</option>
+                      <option value="quality" data-en="Interval number and quality">Intervallzahl und Qualität</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="interval-direction" data-en="Direction">Richtung</label>
+                    <select id="interval-direction">
+                      <option value="mixed" data-en="Mixed">Gemischt</option>
+                      <option value="up" data-en="Ascending">Aufwärts</option>
+                      <option value="down" data-en="Descending">Abwärts</option>
+                    </select>
+                  </div>
+                </div>
+                <fieldset id="key-settings">
+                  <legend data-en="Keys">Tonarten</legend>
+                  <div class="quick-keys">
+                    <button type="button" data-keys="major" data-en="All major keys">Alle Dur</button>
+                    <button type="button" data-keys="minor" data-en="All minor keys">Alle Moll</button>
+                    <button type="button" data-keys="simple" data-en="Up to two accidentals">Bis zwei Vorzeichen</button>
+                    <button type="button" data-keys="all" data-en="All keys">Alle Tonarten</button>
+                  </div>
+                  <div class="key-groups" id="key-groups"></div>
+                </fieldset>
+                <div class="round-settings">
+                  <div>
+                    <label for="question-count" data-en="Questions">Aufgaben</label>
+                    <select id="question-count"></select>
+                    <label id="custom-count-label" hidden><span data-en="Custom question count">Eigene Aufgabenanzahl</span>
+                      <input type="number" id="custom-count" min="1" max="1000" step="1" value="5" disabled required>
+                    </label>
+                  </div>
+                  <div>
+                    <label for="time-limit" data-en="Time limit per question">Zeitlimit pro Aufgabe</label>
+                    <select id="time-limit"></select>
+                    <label id="custom-limit-label" hidden><span data-en="Custom seconds per question">Eigene Sekunden pro Aufgabe</span>
+                      <input type="number" id="custom-limit" min="1" max="3600" step="1" value="10" disabled required>
+                    </label>
+                  </div>
+                </div>
+                <div class="option-checks">
+                  <label><input type="checkbox" id="adaptive-training"> <span data-en="Train adaptively">Adaptiv trainieren</span></label>
+                  <label><input type="checkbox" id="manual-next"> <span data-en="Use a Next button after each answer">Nach jeder Antwort selbst weitergehen</span></label>
+                </div>
               </div>
-              <div>
-                <label for="interval-direction" data-en="Direction">Richtung</label>
-                <select id="interval-direction">
-                  <option value="mixed" data-en="Mixed">Gemischt</option>
-                  <option value="up" data-en="Ascending">Aufwärts</option>
-                  <option value="down" data-en="Descending">Abwärts</option>
-                </select>
-              </div>
-            </div>
-            <fieldset id="key-settings">
-              <legend data-en="Keys">Tonarten</legend>
-              <div class="quick-keys">
-                <button type="button" data-keys="major" data-en="All major keys">Alle Dur</button>
-                <button type="button" data-keys="minor" data-en="All minor keys">Alle Moll</button>
-                <button type="button" data-keys="simple" data-en="Up to two accidentals">Bis zwei Vorzeichen</button>
-                <button type="button" data-keys="all" data-en="All keys">Alle Tonarten</button>
-              </div>
-              <div class="key-groups" id="key-groups"></div>
-            </fieldset>
-            <div class="round-settings">
-              <div>
-                <label for="question-count" data-en="Questions">Aufgaben</label>
-                <select id="question-count"></select>
-                <label id="custom-count-label" hidden><span data-en="Custom question count">Eigene Aufgabenanzahl</span>
-                  <input type="number" id="custom-count" min="1" max="1000" step="1" value="5" disabled required>
-                </label>
-              </div>
-              <div>
-                <label for="time-limit" data-en="Time limit per question">Zeitlimit pro Aufgabe</label>
-                <select id="time-limit"></select>
-                <label id="custom-limit-label" hidden><span data-en="Custom seconds per question">Eigene Sekunden pro Aufgabe</span>
-                  <input type="number" id="custom-limit" min="1" max="3600" step="1" value="10" disabled required>
-                </label>
-              </div>
-            </div>
-            <p><label><input type="checkbox" id="adaptive-training"> <span data-en="Train adaptively">Adaptiv trainieren</span></label></p>
-            <button type="submit" id="start-round" data-en="Start round">Runde starten</button>
+            </details>
           </form>
           <div id="round-play" hidden>
             <h2 id="question-heading" tabindex="-1"></h2>
+            <progress id="round-progress" aria-hidden="true"></progress>
             <p id="countdown" role="timer" hidden></p>
             <div id="notation"></div>
             <div id="ear-playback" hidden>
-              <button type="button" id="play-interval" data-en="Play interval">Intervall abspielen</button>
+              <button type="button" id="play-interval" class="primary" data-en="Play interval">Intervall abspielen</button>
               <p id="audio-status" role="status"></p>
             </div>
             <div id="answers" class="answers" role="group" aria-label="Antwortoptionen" data-en-aria="Answer options"></div>
-            <p id="feedback" role="status"></p>
+            <p id="feedback" role="status" aria-atomic="true"></p>
+            <button type="button" id="next-question" class="primary" aria-describedby="feedback" hidden data-en="Next">Weiter</button>
             <button type="button" id="cancel-round" data-en="Cancel round">Runde abbrechen</button>
           </div>
           <div id="round-result" hidden>
             <h2 id="result-heading" tabindex="-1" data-en="Round results">Rundenauswertung</h2>
             <dl id="result-values"></dl>
-            <button type="button" id="new-round" data-en="Set up a new round">Neue Runde einrichten</button>
+            <button type="button" id="new-round" class="primary" data-en="Set up a new round">Neue Runde einrichten</button>
           </div>
           <p id="round-status" role="status"></p>
         </div>
@@ -153,6 +163,11 @@
         </div>
         <p id="audio-credits" hidden><a href="/licenses/Salamander-Attribution.txt" data-en="Piano sample credits and license">Herkunft und Lizenz der Klaviersamples</a></p>
       </section>
+      <div class="offline">
+        <p id="offline-status" role="status"></p>
+        <button id="check-update" type="button" hidden data-en="Check for updates">Nach Updates suchen</button>
+        <button id="apply-update" type="button" hidden data-en="Apply update">Update anwenden</button>
+      </div>
       <div class="settings">
         <label for="theme" data-en="Appearance">Darstellung</label>
         <select id="theme">

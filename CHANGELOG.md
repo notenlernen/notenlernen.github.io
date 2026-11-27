@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.1.0
+
+- Schnellstart mit fünf Aufgaben ohne Zeitlimit. Weitere Rundeneinstellungen sind aufklappbar.
+- Größere Navigations- und Antwortflächen, kurze Anweisungen und sichtbarer Fortschritt.
+- Optionales Weitergehen im eigenen Tempo mit Textfeedback und Tastaturfokus.
+- Notenschrift passt sich schmalen Bildschirmen an. Systemfarben und Tastaturfokus unterstützen kontrastreiche Darstellung.
+
 ## 1.0.0 – M6
 
 - Englische Oberfläche und Notenbezeichnungen zusätzlich zu Deutsch.

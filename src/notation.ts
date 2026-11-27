@@ -12,6 +12,7 @@ export function drawQuestion(container: HTMLDivElement, question: Question | Int
   container.replaceChildren();
   const renderer = new Renderer(container, Renderer.Backends.SVG);
   renderer.resize(350, 146);
+  container.style.removeProperty('width');
   const context = renderer.getContext();
   const stave = new Stave(10, 23, 330).addClef(question.clef).addKeySignature(question.key.id);
   stave.setContext(context).draw();
@@ -21,6 +22,8 @@ export function drawQuestion(container: HTMLDivElement, question: Question | Int
     : [staveNote(question.note, question.clef, question.accidental, 'w')];
   Formatter.FormatAndDraw(context, stave, notes);
   const svg = container.querySelector('svg')!;
+  svg.style.removeProperty('width');
+  svg.style.removeProperty('height');
   svg.setAttribute('viewBox', '0 0 350 146');
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', `${'notes' in question ? t('Zwei Noten', 'Two notes') : t('Lesenote', 'Note')} ${t('im', 'in')} ${clefLabel(question.clef)}, ${keyLabel(question.key)}`);

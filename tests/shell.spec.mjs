@@ -60,11 +60,19 @@ const test = base.extend({
         goOffline() { denyRequests = true; },
       });
     } finally {
-      await new Promise((resolve) => server.close(resolve));
+      await new Promise((resolve) => {
+        server.close(resolve);
+        server.closeAllConnections();
+      });
       if (nextBuild) await rm(nextBuild, { recursive: true, force: true });
     }
   },
 });
+
+async function openRoundOptions(page) {
+  const details = page.locator('#round-options');
+  if (await details.getAttribute('open') === null) await details.locator('summary').click();
+}
 
 const offlineReady = 'Diese App-Shell ist offline verfügbar.';
 
@@ -211,6 +219,7 @@ test('Notennamentraining mit Bassschlüssel, Tonart und eigener Aufgabenanzahl',
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
   await page.goto(deployment.url);
+  await openRoundOptions(page);
   const tonarten = page.getByRole('group', { name: 'Tonarten', exact: true });
   await expect(tonarten.getByRole('checkbox')).toHaveCount(30);
   await page.getByRole('button', { name: 'Alle Moll', exact: true }).click();
@@ -220,9 +229,11 @@ test('Notennamentraining mit Bassschlüssel, Tonart und eigener Aufgabenanzahl',
   await page.getByRole('button', { name: 'Alle Tonarten', exact: true }).click();
   await expect(tonarten.getByRole('checkbox', { checked: true })).toHaveCount(30);
   await page.reload();
+  await openRoundOptions(page);
   await tonarten.getByRole('checkbox', { name: 'C-Dur', exact: true }).uncheck();
   await tonarten.getByRole('checkbox', { name: 'Fis-Dur', exact: true }).check();
   await page.getByLabel('Notenschlüssel').selectOption('bass');
+  await openRoundOptions(page);
   await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
   await page.getByLabel('Eigene Aufgabenanzahl').fill('1');
   await page.getByRole('button', { name: 'Runde starten' }).click();
@@ -250,6 +261,7 @@ test('Notennamentraining mit Bassschlüssel, Tonart und eigener Aufgabenanzahl',
 
 test('Zeitüberschreitung wird gewertet und zählt nicht zur Antwortzeit', async ({ page, deployment }) => {
   await page.goto(deployment.url);
+  await openRoundOptions(page);
   await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
   await page.getByLabel('Eigene Aufgabenanzahl').fill('1');
   await page.getByLabel('Zeitlimit pro Aufgabe').selectOption('custom');
@@ -289,8 +301,10 @@ test('Eine offene Runde in einem anderen Tab blockiert bestätigte Updates', asy
 test('Visuelle Intervalle in beiden Modi und Wechsel bei aktiver Runde', async ({ page, deployment }) => {
   await page.addInitScript(() => { Math.random = () => 0; });
   await page.goto(deployment.url + '#visuelle-intervalle');
+  await openRoundOptions(page);
   await page.getByLabel('Richtung').selectOption('down');
   await page.getByLabel('Gefragte Eigenschaft').selectOption('quality');
+  await openRoundOptions(page);
   await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
   await page.getByLabel('Eigene Aufgabenanzahl').fill('1');
   await page.getByRole('button', { name: 'Runde starten' }).click();
@@ -337,6 +351,7 @@ test('Gehörtraining spielt erst auf Klick und wiederholt dasselbe Intervall off
   const offline = await context.newPage();
   await offline.goto(deployment.url + '#gehoerintervalle');
 
+  await openRoundOptions(offline);
   await offline.getByLabel('Gefragte Eigenschaft').selectOption('quality');
   await offline.getByLabel('Richtung').selectOption('down');
   await offline.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
@@ -371,6 +386,7 @@ test('Statistik persistiert, filtert und stellt ein bestätigtes lokales Backup 
   await page.goto(deployment.url);
   await page.getByText(offlineReady).waitFor();
   await page.getByLabel('Darstellung').selectOption('dark');
+  await openRoundOptions(page);
   await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
   await page.getByLabel('Eigene Aufgabenanzahl').fill('1');
   await page.getByRole('button', { name: 'Runde starten' }).click();
@@ -417,9 +433,11 @@ test('Statistik persistiert, filtert und stellt ein bestätigtes lokales Backup 
 test('Adaptiertes Training speichert Übungsschwerpunkte und entfernt sie nur beim Langzeitreset', async ({ page, deployment }) => {
   await page.addInitScript(() => { Math.random = () => 0.5; });
   await page.goto(deployment.url);
+  await openRoundOptions(page);
   const adaptive = page.getByLabel('Adaptiv trainieren');
   await expect(adaptive).not.toBeChecked();
   await adaptive.check();
+  await openRoundOptions(page);
   await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
   await page.getByLabel('Eigene Aufgabenanzahl').fill('3');
   await page.getByRole('button', { name: 'Runde starten' }).click();
@@ -460,6 +478,7 @@ test('Englisch übersetzt Noten, Intervalle und Statistik bei unveränderten Tra
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await expect(page.getByRole('heading', { name: 'Note names' })).toBeVisible();
   await expect(page.getByLabel('Direction')).toBeHidden();
+  await openRoundOptions(page);
   await expect(page.getByRole('checkbox', { name: 'B♭ major' })).toBeVisible();
   await page.getByLabel('Questions', { exact: true }).selectOption('custom');
   await page.getByLabel('Custom question count').fill('1');
@@ -472,6 +491,7 @@ test('Englisch übersetzt Noten, Intervalle und Statistik bei unveränderten Tra
   await page.getByRole('link', { name: 'Statistics' }).click();
   await expect(page.getByRole('row', { name: /^Long term 1 1 0 0/ })).toBeVisible();
   await page.getByRole('link', { name: 'Visual intervals' }).click();
+  await openRoundOptions(page);
   await expect(page.getByLabel('Direction')).toBeVisible();
   await page.getByRole('link', { name: 'Privacy and licenses' }).click();
   await expect(page.getByRole('heading', { name: 'Privacy and licenses', exact: true })).toBeVisible();
@@ -519,4 +539,41 @@ test('Barrierefreiheitsprüfung für Einstellungen, Rundendialog und Statistik',
   await page.getByRole('link', { name: 'Statistik', exact: true }).click();
   await expect(page.getByRole('table').first()).toBeVisible();
   await audit();
+});
+
+test('Schnellstart und selbst bestimmtes Weitergehen sind per Tastatur bedienbar', async ({ page, deployment }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.clock.install();
+  await page.goto(deployment.url);
+  const start = page.getByRole('button', { name: 'Runde starten' });
+  await expect(start).toBeVisible();
+  await expect(start).toHaveAccessibleDescription('5 Aufgaben · ohne Zeitlimit');
+  await expect(page.getByLabel('Zeitlimit pro Aufgabe')).toBeHidden();
+  await openRoundOptions(page);
+  await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
+  await page.getByLabel('Eigene Aufgabenanzahl').fill('2');
+  await page.getByLabel('Nach jeder Antwort selbst weitergehen').check();
+  await expect(start).toHaveAccessibleDescription('2 Aufgaben · ohne Zeitlimit');
+  await page.locator('#round-options summary').click();
+  await start.press('Enter');
+
+  const question = page.getByRole('heading', { name: 'Aufgabe 1 von 2' });
+  await expect(question).toBeFocused();
+  const answer = page.getByRole('group', { name: 'Antwortoptionen' }).getByRole('button').first();
+  expect((await answer.boundingBox()).height).toBeGreaterThanOrEqual(44);
+  expect(await page.locator('html').evaluate(element => element.scrollWidth)).toBeLessThanOrEqual(320);
+  await page.keyboard.press('Tab');
+  await expect(answer).toBeFocused();
+  await page.keyboard.press('Enter');
+  const next = page.getByRole('button', { name: 'Weiter', exact: true });
+  await expect(next).toBeFocused();
+  await expect(page.locator('#feedback')).toHaveText(/Richtig|Falsch/);
+  await page.clock.fastForward(2000);
+  await expect(question).toBeVisible();
+  await next.press('Enter');
+
+  await expect(page.getByRole('heading', { name: 'Aufgabe 2 von 2' })).toBeFocused();
+  await answer.press('Enter');
+  await page.getByRole('button', { name: 'Ergebnis zeigen' }).press('Enter');
+  await expect(page.getByRole('heading', { name: 'Rundenauswertung' })).toBeFocused();
 });

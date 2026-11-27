@@ -6,7 +6,7 @@ Zieladresse [notenlernen.github.io](https://notenlernen.github.io/)
 
 ## Status
 
-Version 1.0.0 enthält Notennamen-, visuelles Intervall- und Gehörtraining mit lokaler Statistik und optionaler adaptiver Aufgabenauswahl. Die beiden Leseübungen nutzen 30 Tonarten sowie Violin- und Bassschlüssel. Das Gehörtraining spielt wiederholbare Klavieraufnahmen von der Prime bis zur Oktave ab. Alle drei Modi bieten vier Antwortoptionen, ein optionales Zeitlimit und eine Rundenauswertung. Die Statistik bietet Session, Kalendertag, Langzeitverlauf, getrennte Resets und ein lokales JSON-Backup. Die Oberfläche ist auf Deutsch und Englisch verfügbar.
+Version 1.1.0 enthält Notennamen-, visuelles Intervall- und Gehörtraining mit lokaler Statistik und optionaler adaptiver Aufgabenauswahl. Die beiden Leseübungen nutzen 30 Tonarten sowie Violin- und Bassschlüssel. Das Gehörtraining spielt wiederholbare Klavieraufnahmen von der Prime bis zur Oktave ab. Alle drei Modi bieten vier Antwortoptionen, ein optionales Zeitlimit und eine Rundenauswertung. Die Statistik bietet Session, Kalendertag, Langzeitverlauf, getrennte Resets und ein lokales JSON-Backup. Die Oberfläche ist auf Deutsch und Englisch verfügbar. Eine Standardrunde startet direkt mit fünf Aufgaben ohne Zeitlimit. Unter **Übung einstellen** lässt sich auch das selbst bestimmte Weitergehen nach jeder Antwort einschalten.
 
 ## Lokal entwickeln
 
