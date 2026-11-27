@@ -6,9 +6,9 @@ import { showStatistics } from './statistics-ui';
 import { languageLink, t } from './language';
 
 const areas = [
-  { id: 'notennamen', title: t('Notennamen', 'Note names'), description: t('Lies die Note und wähle ihren Namen.', 'Read the note and choose its name.') },
-  { id: 'visuelle-intervalle', title: t('Visuelle Intervalle', 'Visual intervals'), description: t('Bestimme den Abstand zwischen den beiden Noten von links nach rechts.', 'Identify the interval between the two notes from left to right.') },
-  { id: 'gehoerintervalle', title: t('Gehörintervalle', 'Ear training'), description: t('Höre beide Klaviertöne und bestimme das Intervall.', 'Listen to both piano notes and identify the interval.') },
+  { id: 'notennamen', title: t('Notennamen', 'Note names'), description: t('Welche Note siehst du?', 'Which note do you see?') },
+  { id: 'visuelle-intervalle', title: t('Visuelle Intervalle', 'Visual intervals'), description: t('Wie weit liegen die beiden Noten auseinander?', 'How far apart are the two notes?') },
+  { id: 'gehoerintervalle', title: t('Gehörintervalle', 'Ear training'), description: t('Hör dir die beiden Töne an. Wie weit liegen sie auseinander?', 'Listen to the two notes. How far apart are they?') },
   { id: 'statistik', title: t('Statistik', 'Statistics'), description: t('Deine Ergebnisse bleiben in diesem Browser.', 'Your results stay in this browser.') },
 ];
 

@@ -12,6 +12,7 @@ export function drawQuestion(container: HTMLDivElement, question: Question | Int
   container.replaceChildren();
   const renderer = new Renderer(container, Renderer.Backends.SVG);
   renderer.resize(350, 146);
+  container.style.removeProperty('width');
   const context = renderer.getContext();
   const stave = new Stave(10, 23, 330).addClef(question.clef).addKeySignature(question.key.id);
   stave.setContext(context).draw();

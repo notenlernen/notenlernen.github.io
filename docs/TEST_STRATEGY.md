@@ -28,3 +28,7 @@ Tests mit festem Zufallsstartwert prüfen reproduzierbare Gewichtung und die unv
 ## Umsetzung in M6
 
 Die Browsertests prüfen zusätzlich Sprachwahl, Offline-Verfügbarkeit verzögert geladener Ressourcen und lokale Webanfragen. Axe prüft Einrichtung, Runde und Statistik in Chromium und WebKit. Die Abnahme weist die getrennte grafische Linux-Installation und fehlende physische Geräte ausdrücklich aus. [M6-Abnahmeprotokoll](M6-ABNAHME.md)
+
+## Oberfläche 1.1.0
+
+Die Browser-Matrix prüft den Schnellstart mit aufklappbaren Einstellungen, aktive Runden bei 320 CSS-Pixeln und das schrittweise Weitergehen per Tastatur. Antworten bleiben als Text verständlich und der Fokus wechselt auf die Aktion zum Weitergehen oder auf die nächste Überschrift. Die vorhandenen Prüfungen für Touch, helle und dunkle Darstellung, Offline-Nutzung und Sprachen gelten weiterhin. Automatisierte Tests ersetzen keine Nutzertests mit Kindern oder Screenreadern auf physischen Geräten.
