@@ -2,7 +2,14 @@ import { generateQuestion, keys, quickKeys, type Clef, type Key, type Question }
 import { drawQuestion, prepareNotation } from './notation';
 import { questionCounts, Round, timeLimits } from './round';
 import { holdRound } from './round-lock';
+import { generateIntervalQuestion, type Direction, type IntervalMode, type IntervalQuestion } from './intervals';
 
+export type TrainingMode = 'notes' | 'intervals';
+
+const trainer = document.querySelector<HTMLElement>('#training-round')!;
+const intervalSettings = document.querySelector<HTMLElement>('#interval-settings')!;
+const intervalMode = document.querySelector<HTMLSelectElement>('#interval-mode')!;
+const intervalDirection = document.querySelector<HTMLSelectElement>('#interval-direction')!;
 const setup = document.querySelector<HTMLFormElement>('#round-setup')!;
 const start = document.querySelector<HTMLButtonElement>('#start-round')!;
 const groups = document.querySelector<HTMLElement>('#key-groups')!;
@@ -62,7 +69,12 @@ count.addEventListener('change', () => toggleCustom(count, customCount));
 limit.addEventListener('change', () => toggleCustom(limit, customLimit));
 
 let round: Round | undefined;
-let question: Question;
+let question: Question | IntervalQuestion;
+let displayedMode: TrainingMode | undefined;
+let roundMode: TrainingMode | undefined;
+let resultMode: TrainingMode | undefined;
+let directions: Direction[] = [];
+let intervalLevel: IntervalMode = 'number';
 let selectedKeys: Key[] = [];
 let selectedClefs: Clef[] = [];
 let releaseRound: (() => void) | undefined;
@@ -71,25 +83,37 @@ let feedbackTimer: number | undefined;
 const formatNumber = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 });
 const seconds = (time: number | null) => time === null ? '–' : `${formatNumber.format(time / 1000)} s`;
 
+export function showTrainer(mode: TrainingMode | undefined): boolean {
+  displayedMode = mode;
+  const blocked = Boolean(mode && roundMode && mode !== roundMode);
+  trainer.hidden = !mode || blocked;
+  intervalSettings.hidden = mode !== 'intervals';
+  play.hidden = !roundMode;
+  result.hidden = !mode || resultMode !== mode || Boolean(roundMode);
+  setup.hidden = Boolean(roundMode) || !result.hidden;
+  return blocked;
+}
+
 function release(): void {
   window.clearInterval(timer);
   window.clearTimeout(feedbackTimer);
   round = undefined;
+  roundMode = undefined;
   releaseRound?.();
   releaseRound = undefined;
 }
 
 function showSetup(): void {
+  resultMode = undefined;
   release();
-  result.hidden = true;
-  play.hidden = true;
-  setup.hidden = false;
   status.textContent = '';
-  start.focus();
+  document.dispatchEvent(new Event('training-state-changed'));
+  if (!trainer.hidden) start.focus();
 }
 
 function finish(endedAt: number): void {
   const summary = round!.summary(endedAt);
+  resultMode = roundMode;
   const entries = [
     ['Richtig', String(summary.correct)],
     ['Falsch (inkl. Zeitüberschreitungen)', String(summary.wrong)],
@@ -109,9 +133,8 @@ function finish(endedAt: number): void {
     values.append(term, detail);
   }
   release();
-  play.hidden = true;
-  result.hidden = false;
-  document.querySelector<HTMLElement>('#result-heading')!.focus();
+  document.dispatchEvent(new Event('training-state-changed'));
+  if (!trainer.hidden && !result.hidden) document.querySelector<HTMLElement>('#result-heading')!.focus();
 }
 
 function submitAnswer(correct: boolean | null): void {
@@ -141,7 +164,9 @@ function tick(): void {
 
 function showQuestion(): void {
   if (!round) return;
-  question = generateQuestion(selectedKeys, selectedClefs);
+  question = roundMode === 'intervals'
+    ? generateIntervalQuestion(selectedKeys, selectedClefs, directions, intervalLevel)
+    : generateQuestion(selectedKeys, selectedClefs);
   heading.textContent = `Aufgabe ${round.attempts.length + 1} von ${round.total}`;
   feedback.textContent = '';
   drawQuestion(notation, question);
@@ -159,12 +184,13 @@ function showQuestion(): void {
     tick();
     timer = window.setInterval(tick, 100);
   }
-  heading.focus();
+  if (!trainer.hidden) heading.focus();
 }
 
 setup.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (start.disabled) return;
+  if (start.disabled || !displayedMode) return;
+  const requestedMode = displayedMode;
   selectedKeys = keys.filter(({ id }) => keyInputs.get(id)!.checked);
   if (!selectedKeys.length) {
     status.textContent = 'Bitte mindestens eine Tonart wählen.';
@@ -173,6 +199,9 @@ setup.addEventListener('submit', async (event) => {
   }
   const clef = clefs.value;
   selectedClefs = clef === 'mixed' ? ['treble', 'bass'] : [clef === 'bass' ? 'bass' : 'treble'];
+  const direction = intervalDirection.value;
+  directions = direction === 'up' || direction === 'down' ? [direction] : ['up', 'down'];
+  intervalLevel = intervalMode.value === 'quality' ? 'quality' : 'number';
   const total = count.value === 'custom' ? customCount.valueAsNumber : Number(count.value);
   const limitMs = limit.value === 'none' ? null
     : (limit.value === 'custom' ? customLimit.valueAsNumber : Number(limit.value)) * 1000;
@@ -185,9 +214,10 @@ setup.addEventListener('submit', async (event) => {
       status.textContent = 'Bitte warte, bis das Update abgeschlossen ist.';
       return;
     }
+    resultMode = undefined;
+    roundMode = requestedMode;
     round = new Round(total, limitMs, performance.now());
-    setup.hidden = true;
-    play.hidden = false;
+    document.dispatchEvent(new Event('training-state-changed'));
     showQuestion();
   } catch {
     showSetup();

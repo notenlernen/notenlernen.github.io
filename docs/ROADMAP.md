@@ -1,5 +1,5 @@
 # Roadmap
-Jeder Meilenstein: eigener Feature-Branch, ein reviewbereiter nicht gemergter PR, dokumentierte Tests und Abnahmekriterien.
+Jeder Meilenstein erhält einen eigenen Feature-Branch und einen Pull Request mit dokumentierten Tests und Abnahmekriterien. Nach erfolgreicher Abnahme wird der PR in den Zielbranch gemergt und der Entwicklungsbranch gelöscht.
 - M0: Vite/TypeScript, responsive App-Shell, Navigation, Manifest, Service Worker, Offline-/Updatefundament, Pages-Workflow, CI, Storage-Grundlage. Abnahme: Build, Lint, Typecheck, Tests, installierbare Shell, Offline-Neustart nach Cacheaufbau, Update erhält Testdaten.
 - M1: Notennamentrainer, 30 Tonarten, Schlüssel, Notensatz, Aufgabenanzahl und Zeitmodus. Abnahme: musikalische Fixtures, eindeutige Antworten, Rundenauswertung.
 - M2: visuelle Intervalle mit Richtung und Qualität. Abnahme: korrekte diatonische/chromatische Berechnung und Notation.

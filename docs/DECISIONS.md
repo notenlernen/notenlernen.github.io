@@ -20,3 +20,8 @@
 - ADR-010: Der Notengenerator unterscheidet Buchstabe, Oktave und Alteration. Aufgaben nutzen die Vorzeichnung der ausgewählten Tonart. Ein Teil der Noten erhält ein explizites Kreuz, Be oder Auflösungszeichen. Die Antwort nennt die notierte Tonklasse auf Deutsch.
 - ADR-011: Runden nutzen eine monotone Uhr. Die letzte Wertung beendet die gemessene Rundendauer. Timeouts zählen zu den falschen Antworten und bleiben bei den Antwortzeiten außen vor. Runden bleiben bis M4 im Arbeitsspeicher. Web Locks schützen aktive Runden über Tabs hinweg vor einem bestätigten Update. Browser ohne Web Locks können trainieren, aber in M1 keine Updates über die Oberfläche anwenden.
 - ADR-012: Der Veröffentlichungsjob verifiziert vor dem Deploy die GitHub-Actions-Quelle und danach die öffentliche Build-Kennung. Beim M0-Merge liefen klassisches Pages und der Actions-Deploy parallel. Trotz erfolgreichem Workflow meldete die öffentliche URL 404 für die Build-Kennung. Das API-Konto konnte die Repository-Einstellung nicht ändern.
+
+## Konkretisierung für M2
+
+- ADR-013: Intervallfragen erzeugen zwei notierte Einzelnoten innerhalb eines Takts. Die Position auf dem System und die klingende Tonhöhe bleiben getrennt. Prime und enharmonische Grenzfälle folgen ihrer Schreibweise.
+- ADR-014: Der M2-PR basierte während der Entwicklung auf dem offenen M1-Branch. Nach dem M1-Merge wurde er auf `main` umgestellt. Die Prüfpipeline läuft für PRs gegen `main`. Nur Pushes auf `main` können veröffentlichen.

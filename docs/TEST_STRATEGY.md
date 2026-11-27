@@ -8,3 +8,7 @@ Die Node-Tests prüfen die Theme-Validierung, das IndexedDB-Schema und den Erhal
 ## Umsetzung in M1
 
 Die Tests ergänzen deterministische Musik- und Timer-Fixtures sowie drei Browserfälle je Engine. Das [M1-Abnahmeprotokoll](M1-ABNAHME.md) hält Umfang, Betriebsprüfung und verbleibende Geräteprüfungen fest.
+
+## Umsetzung in M2
+
+Deterministische Fixtures prüfen Intervallzahl, Qualität, Richtung, Wiederholung von Vorzeichen im selben Takt und Eindeutigkeit der Antworten. Ein Browserfall pro Engine führt beide Modi und den Bereichswechsel während einer aktiven Runde aus. [M2-Abnahmeprotokoll](M2-ABNAHME.md)
