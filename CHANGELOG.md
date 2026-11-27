@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.5.0 – M4
+
+- Lokale Trainingsstatistik mit Session-, Tages- und Langzeitsummen, Trend, Historie, Bestleistungen und Kategorieauswertung.
+- Unabhängige, bestätigungspflichtige Statistikresets mit Modusfilter.
+- Versionierter JSON-Export und validierter atomarer Import. IndexedDB-Schema 2 erhält vorhandene Einstellungen und Datensätze.
+
 ## 0.4.0 – M3
 
 - Gehörtraining mit lokal gespeicherten, frei lizenzierten Klaviersamples, Richtungswahl und wiederholbarer Wiedergabe.

@@ -104,6 +104,50 @@
           </div>
           <p id="round-status" role="status"></p>
         </div>
+        <div id="statistics" hidden>
+          <label for="statistics-mode">Trainingsmodus</label>
+          <select id="statistics-mode">
+            <option value="all">Alle Trainingsmodi</option>
+            <option value="notes">Notennamen</option>
+            <option value="intervals">Visuelle Intervalle</option>
+            <option value="ear">Gehörintervalle</option>
+          </select>
+          <div id="statistics-totals"></div>
+          <details open><summary>Trend nach Kalendertag</summary><div id="statistics-trend"></div></details>
+          <details><summary>Rundenhistorie und Bestleistungen</summary><div id="statistics-history"></div></details>
+          <details><summary>Fehler nach Kategorie</summary><div id="statistics-errors"></div></details>
+          <details>
+            <summary>Statistik zurücksetzen</summary>
+            <label for="statistics-reset-level">Ebene</label>
+            <select id="statistics-reset-level">
+              <option value="session">Diese Session</option>
+              <option value="day">Heute</option>
+              <option value="lifetime">Langzeitverlauf</option>
+              <option value="all">Gesamte Statistik aller Modi</option>
+            </select>
+            <button type="button" id="statistics-reset">Zurücksetzen …</button>
+          </details>
+          <details>
+            <summary>Lokales Backup</summary>
+            <button type="button" id="statistics-export">Statistik exportieren</button>
+            <label for="statistics-import">Backup-Datei auswählen</label>
+            <input type="file" id="statistics-import" accept=".json,application/json">
+          </details>
+          <p id="statistics-status" role="status"></p>
+          <dialog id="statistics-confirm" aria-labelledby="statistics-confirm-title">
+            <form method="dialog">
+              <h2 id="statistics-confirm-title">Änderung bestätigen</h2>
+              <p id="statistics-confirm-message"></p>
+              <label id="statistics-confirm-extra" hidden>
+                <input type="checkbox" id="statistics-confirm-check"> Ich bestätige, dass die betroffenen Daten ersetzt oder gelöscht werden.
+              </label>
+              <div class="confirmation-buttons">
+                <button value="cancel" autofocus>Abbrechen</button>
+                <button value="confirm" id="statistics-confirm-action">Bestätigen</button>
+              </div>
+            </form>
+          </dialog>
+        </div>
         <p id="audio-credits" hidden><a href="/licenses/Salamander-Attribution.txt">Herkunft und Lizenz der Klaviersamples</a></p>
       </section>
       <div class="settings">

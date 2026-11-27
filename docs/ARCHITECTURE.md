@@ -22,3 +22,7 @@ Das Build-Skript erzeugt `version.json` und einen Worker mit Hash im Dateinamen.
 ## Implementierter Stand M3
 
 `src/ear.ts` erzeugt klingende Intervallfragen und wählt Aufnahmen nach MIDI-Tonhöhe. `src/piano.ts` dekodiert die lokalen Dateien einmal pro Tab und plant beide Tonereignisse mit Web Audio. Der bestehende Rundendialog startet den Antwort-Countdown nach der ersten vollständigen Wiedergabe. Statistikpersistenz folgt in M4.
+
+## Implementierter Stand M4
+
+IndexedDB-Schema 2 ergänzt Modusindizes für Versuche, Runden und adaptive Profile. `src/statistics.ts` schreibt Versuch, Session- und Tagessumme in einer Transaktion. Eine Rundensumme wird nur für vollständig gespeicherte Runden angelegt. Session und Tag sind getrennte Aggregate, der Langzeitverlauf liest die historischen Antworten. `src/backup.ts` exportiert ein versioniertes Statistikformat und ersetzt validierte Daten in einer gemeinsamen Transaktion. `src/statistics-ui.ts` verbindet die Ansicht, Bestätigung und Aktualisierung zwischen Tabs. Schreibvorgänge bleiben lokal.

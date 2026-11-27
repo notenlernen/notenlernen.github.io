@@ -6,7 +6,7 @@ Zieladresse [notenlernen.github.io](https://notenlernen.github.io/)
 
 ## Status
 
-Version 0.4.0 enthält Notennamen-, visuelles Intervall- und Gehörtraining. Die beiden Leseübungen nutzen 30 Tonarten sowie Violin- und Bassschlüssel. Das Gehörtraining spielt wiederholbare Klavieraufnahmen von der Prime bis zur Oktave ab. Alle drei Modi bieten vier Antwortoptionen, ein optionales Zeitlimit und eine Rundenauswertung. Persistente Statistik folgt in M4.
+Version 0.5.0 enthält Notennamen-, visuelles Intervall- und Gehörtraining mit lokaler Statistik. Die beiden Leseübungen nutzen 30 Tonarten sowie Violin- und Bassschlüssel. Das Gehörtraining spielt wiederholbare Klavieraufnahmen von der Prime bis zur Oktave ab. Alle drei Modi bieten vier Antwortoptionen, ein optionales Zeitlimit und eine Rundenauswertung. Die Statistik bietet Session, Kalendertag, Langzeitverlauf, getrennte Resets und ein lokales JSON-Backup.
 
 ## Lokal entwickeln
 
@@ -57,5 +57,6 @@ Die Installation hängt von Browser und Betriebssystem ab. Chromium-basierte Bro
 - [Abnahme und offene Punkte M1](docs/M1-ABNAHME.md)
 - [Abnahme und offene Punkte M2](docs/M2-ABNAHME.md)
 - [Abnahme und Audio-Lizenznachweis M3](docs/M3-ABNAHME.md)
+- [Abnahme der lokalen Statistik M4](docs/M4-ABNAHME.md)
 - [Entwicklungsregeln](AGENTS.md)
 - [Changelog](CHANGELOG.md)
