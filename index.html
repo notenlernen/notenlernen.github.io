@@ -11,157 +11,161 @@
     <title>Notenlernen</title>
   </head>
   <body>
-    <a class="skip" href="#inhalt">Zum Inhalt</a>
+    <a class="skip" href="#inhalt" data-en="Skip to content">Zum Inhalt</a>
     <header class="shell">
       <p class="brand">Notenlernen</p>
-      <nav aria-label="Bereiche">
-        <a href="#notennamen">Notennamen</a>
-        <a href="#visuelle-intervalle">Visuelle Intervalle</a>
-        <a href="#gehoerintervalle">Gehörintervalle</a>
-        <a href="#statistik">Statistik</a>
+      <nav aria-label="Bereiche" data-en-aria="Sections">
+        <a href="#notennamen" data-en="Note names">Notennamen</a>
+        <a href="#visuelle-intervalle" data-en="Visual intervals">Visuelle Intervalle</a>
+        <a href="#gehoerintervalle" data-en="Ear training">Gehörintervalle</a>
+        <a href="#statistik" data-en="Statistics">Statistik</a>
       </nav>
+      <a id="language-link" href="/?lang=en" lang="en" hreflang="en">English</a>
     </header>
     <main id="inhalt" class="shell" tabindex="-1">
       <div class="offline">
         <p id="offline-status" role="status"></p>
-        <button id="check-update" type="button" hidden>Nach Updates suchen</button>
-        <button id="apply-update" type="button" hidden>Update anwenden</button>
+        <button id="check-update" type="button" hidden data-en="Check for updates">Nach Updates suchen</button>
+        <button id="apply-update" type="button" hidden data-en="Apply update">Update anwenden</button>
       </div>
       <section aria-labelledby="bereich">
-        <h1 id="bereich" tabindex="-1">Notennamen</h1>
-        <p id="beschreibung">Lies die Note und wähle ihren Namen.</p>
+        <h1 id="bereich" tabindex="-1" data-en="Note names">Notennamen</h1>
+        <p id="beschreibung" data-en="Read the note and choose its name.">Lies die Note und wähle ihren Namen.</p>
         <div id="training-round">
           <form id="round-setup">
             <div id="clef-settings">
-              <label for="clefs">Notenschlüssel</label>
+              <label for="clefs" data-en="Clef">Notenschlüssel</label>
               <select id="clefs">
-                <option value="treble">Violinschlüssel</option>
-                <option value="bass">Bassschlüssel</option>
-                <option value="mixed">Violin- und Bassschlüssel</option>
+                <option value="treble" data-en="Treble clef">Violinschlüssel</option>
+                <option value="bass" data-en="Bass clef">Bassschlüssel</option>
+                <option value="mixed" data-en="Treble and bass clefs">Violin- und Bassschlüssel</option>
               </select>
             </div>
             <div id="interval-settings" class="round-settings" hidden>
               <div>
-                <label for="interval-mode">Gefragte Eigenschaft</label>
+                <label for="interval-mode" data-en="Answer type">Gefragte Eigenschaft</label>
                 <select id="interval-mode">
-                  <option value="number">Intervallzahl</option>
-                  <option value="quality">Intervallzahl und Qualität</option>
+                  <option value="number" data-en="Interval number">Intervallzahl</option>
+                  <option value="quality" data-en="Interval number and quality">Intervallzahl und Qualität</option>
                 </select>
               </div>
               <div>
-                <label for="interval-direction">Richtung</label>
+                <label for="interval-direction" data-en="Direction">Richtung</label>
                 <select id="interval-direction">
-                  <option value="mixed">Gemischt</option>
-                  <option value="up">Aufwärts</option>
-                  <option value="down">Abwärts</option>
+                  <option value="mixed" data-en="Mixed">Gemischt</option>
+                  <option value="up" data-en="Ascending">Aufwärts</option>
+                  <option value="down" data-en="Descending">Abwärts</option>
                 </select>
               </div>
             </div>
             <fieldset id="key-settings">
-              <legend>Tonarten</legend>
+              <legend data-en="Keys">Tonarten</legend>
               <div class="quick-keys">
-                <button type="button" data-keys="major">Alle Dur</button>
-                <button type="button" data-keys="minor">Alle Moll</button>
-                <button type="button" data-keys="simple">Bis zwei Vorzeichen</button>
-                <button type="button" data-keys="all">Alle Tonarten</button>
+                <button type="button" data-keys="major" data-en="All major keys">Alle Dur</button>
+                <button type="button" data-keys="minor" data-en="All minor keys">Alle Moll</button>
+                <button type="button" data-keys="simple" data-en="Up to two accidentals">Bis zwei Vorzeichen</button>
+                <button type="button" data-keys="all" data-en="All keys">Alle Tonarten</button>
               </div>
               <div class="key-groups" id="key-groups"></div>
             </fieldset>
             <div class="round-settings">
               <div>
-                <label for="question-count">Aufgaben</label>
+                <label for="question-count" data-en="Questions">Aufgaben</label>
                 <select id="question-count"></select>
-                <label id="custom-count-label" hidden>Eigene Aufgabenanzahl
+                <label id="custom-count-label" hidden><span data-en="Custom question count">Eigene Aufgabenanzahl</span>
                   <input type="number" id="custom-count" min="1" max="1000" step="1" value="5" disabled required>
                 </label>
               </div>
               <div>
-                <label for="time-limit">Zeitlimit pro Aufgabe</label>
+                <label for="time-limit" data-en="Time limit per question">Zeitlimit pro Aufgabe</label>
                 <select id="time-limit"></select>
-                <label id="custom-limit-label" hidden>Eigene Sekunden pro Aufgabe
+                <label id="custom-limit-label" hidden><span data-en="Custom seconds per question">Eigene Sekunden pro Aufgabe</span>
                   <input type="number" id="custom-limit" min="1" max="3600" step="1" value="10" disabled required>
                 </label>
               </div>
             </div>
-            <p><label><input type="checkbox" id="adaptive-training"> Adaptiv trainieren</label></p>
-            <button type="submit" id="start-round">Runde starten</button>
+            <p><label><input type="checkbox" id="adaptive-training"> <span data-en="Train adaptively">Adaptiv trainieren</span></label></p>
+            <button type="submit" id="start-round" data-en="Start round">Runde starten</button>
           </form>
           <div id="round-play" hidden>
             <h2 id="question-heading" tabindex="-1"></h2>
             <p id="countdown" role="timer" hidden></p>
             <div id="notation"></div>
             <div id="ear-playback" hidden>
-              <button type="button" id="play-interval">Intervall abspielen</button>
+              <button type="button" id="play-interval" data-en="Play interval">Intervall abspielen</button>
               <p id="audio-status" role="status"></p>
             </div>
-            <div id="answers" class="answers" aria-label="Antwortoptionen"></div>
+            <div id="answers" class="answers" role="group" aria-label="Antwortoptionen" data-en-aria="Answer options"></div>
             <p id="feedback" role="status"></p>
-            <button type="button" id="cancel-round">Runde abbrechen</button>
+            <button type="button" id="cancel-round" data-en="Cancel round">Runde abbrechen</button>
           </div>
           <div id="round-result" hidden>
-            <h2 id="result-heading" tabindex="-1">Rundenauswertung</h2>
+            <h2 id="result-heading" tabindex="-1" data-en="Round results">Rundenauswertung</h2>
             <dl id="result-values"></dl>
-            <button type="button" id="new-round">Neue Runde einrichten</button>
+            <button type="button" id="new-round" data-en="Set up a new round">Neue Runde einrichten</button>
           </div>
           <p id="round-status" role="status"></p>
         </div>
         <div id="statistics" hidden>
-          <label for="statistics-mode">Trainingsmodus</label>
+          <label for="statistics-mode" data-en="Training mode">Trainingsmodus</label>
           <select id="statistics-mode">
-            <option value="all">Alle Trainingsmodi</option>
-            <option value="notes">Notennamen</option>
-            <option value="intervals">Visuelle Intervalle</option>
-            <option value="ear">Gehörintervalle</option>
+            <option value="all" data-en="All training modes">Alle Trainingsmodi</option>
+            <option value="notes" data-en="Note names">Notennamen</option>
+            <option value="intervals" data-en="Visual intervals">Visuelle Intervalle</option>
+            <option value="ear" data-en="Ear training">Gehörintervalle</option>
           </select>
           <div id="statistics-totals"></div>
-          <details open><summary>Trend nach Kalendertag</summary><div id="statistics-trend"></div></details>
-          <details><summary>Rundenhistorie und Bestleistungen</summary><div id="statistics-history"></div></details>
-          <details><summary>Übungsschwerpunkte</summary><div id="statistics-weaknesses"></div></details>
-          <details><summary>Fehler nach Kategorie</summary><div id="statistics-errors"></div></details>
+          <details open><summary data-en="Trend by date">Trend nach Kalendertag</summary><div id="statistics-trend"></div></details>
+          <details><summary data-en="Round history and personal bests">Rundenhistorie und Bestleistungen</summary><div id="statistics-history"></div></details>
+          <details><summary data-en="Practice priorities">Übungsschwerpunkte</summary><div id="statistics-weaknesses"></div></details>
+          <details><summary data-en="Errors by category">Fehler nach Kategorie</summary><div id="statistics-errors"></div></details>
           <details>
-            <summary>Statistik zurücksetzen</summary>
-            <label for="statistics-reset-level">Ebene</label>
+            <summary data-en="Reset statistics">Statistik zurücksetzen</summary>
+            <label for="statistics-reset-level" data-en="Scope">Ebene</label>
             <select id="statistics-reset-level">
-              <option value="session">Diese Session</option>
-              <option value="day">Heute</option>
-              <option value="lifetime">Langzeitverlauf</option>
-              <option value="all">Gesamte Statistik aller Modi</option>
+              <option value="session" data-en="This session">Diese Session</option>
+              <option value="day" data-en="Today">Heute</option>
+              <option value="lifetime" data-en="Long-term history">Langzeitverlauf</option>
+              <option value="all" data-en="All statistics across all modes">Gesamte Statistik aller Modi</option>
             </select>
-            <button type="button" id="statistics-reset">Zurücksetzen …</button>
+            <button type="button" id="statistics-reset" data-en="Reset …">Zurücksetzen …</button>
           </details>
           <details>
-            <summary>Lokales Backup</summary>
-            <button type="button" id="statistics-export">Statistik exportieren</button>
-            <label for="statistics-import">Backup-Datei auswählen</label>
+            <summary data-en="Local backup">Lokales Backup</summary>
+            <button type="button" id="statistics-export" data-en="Export statistics">Statistik exportieren</button>
+            <label for="statistics-import" data-en="Choose a backup file">Backup-Datei auswählen</label>
             <input type="file" id="statistics-import" accept=".json,application/json">
           </details>
           <p id="statistics-status" role="status"></p>
           <dialog id="statistics-confirm" aria-labelledby="statistics-confirm-title">
             <form method="dialog">
-              <h2 id="statistics-confirm-title">Änderung bestätigen</h2>
+              <h2 id="statistics-confirm-title" data-en="Confirm change">Änderung bestätigen</h2>
               <p id="statistics-confirm-message"></p>
               <label id="statistics-confirm-extra" hidden>
-                <input type="checkbox" id="statistics-confirm-check"> Ich bestätige, dass die betroffenen Daten ersetzt oder gelöscht werden.
+                <input type="checkbox" id="statistics-confirm-check"> <span data-en="I confirm that the affected data will be replaced or deleted.">Ich bestätige, dass die betroffenen Daten ersetzt oder gelöscht werden.</span>
               </label>
               <div class="confirmation-buttons">
-                <button value="cancel" autofocus>Abbrechen</button>
-                <button value="confirm" id="statistics-confirm-action">Bestätigen</button>
+                <button value="cancel" autofocus data-en="Cancel">Abbrechen</button>
+                <button value="confirm" id="statistics-confirm-action" data-en="Confirm">Bestätigen</button>
               </div>
             </form>
           </dialog>
         </div>
-        <p id="audio-credits" hidden><a href="/licenses/Salamander-Attribution.txt">Herkunft und Lizenz der Klaviersamples</a></p>
+        <p id="audio-credits" hidden><a href="/licenses/Salamander-Attribution.txt" data-en="Piano sample credits and license">Herkunft und Lizenz der Klaviersamples</a></p>
       </section>
       <div class="settings">
-        <label for="theme">Darstellung</label>
+        <label for="theme" data-en="Appearance">Darstellung</label>
         <select id="theme">
           <option value="system">System</option>
-          <option value="light">Hell</option>
-          <option value="dark">Dunkel</option>
+          <option value="light" data-en="Light">Hell</option>
+          <option value="dark" data-en="Dark">Dunkel</option>
         </select>
         <p id="storage-status" role="status"></p>
       </div>
     </main>
+    <footer class="shell">
+      <a id="privacy-link" href="/datenschutz.html" data-en="Privacy and licenses">Datenschutz und Lizenzen</a>
+    </footer>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -1,6 +1,9 @@
 import { exportStatistics, importStatistics, parseBackup } from './backup';
 import { getDatabase } from './storage';
 import { beforeUpdate } from './round-lock';
+import { language, t } from './language';
+import { answerLabel, categoryLabel, keyLabel } from './music-labels';
+import { keys } from './music';
 import { localDate, modeLabels, readStatistics, resetStatistics, sessionId, type ModeFilter, type ResetLevel, type Totals } from './statistics';
 
 const panel = document.querySelector<HTMLElement>('#statistics')!;
@@ -18,11 +21,30 @@ const extra = document.querySelector<HTMLElement>('#statistics-confirm-extra')!;
 const check = document.querySelector<HTMLInputElement>('#statistics-confirm-check')!;
 const confirmAction = document.querySelector<HTMLButtonElement>('#statistics-confirm-action')!;
 const channel = typeof BroadcastChannel === 'undefined' ? undefined : new BroadcastChannel('notenlernen-statistics');
-const percent = new Intl.NumberFormat('de-DE', { style: 'percent', maximumFractionDigits: 1 });
-const seconds = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 2 });
-const dateTime = new Intl.DateTimeFormat('de-DE', { dateStyle: 'short', timeStyle: 'short' });
+const percent = new Intl.NumberFormat(language, { style: 'percent', maximumFractionDigits: 1 });
+const seconds = new Intl.NumberFormat(language, { maximumFractionDigits: 2 });
+const dateTime = new Intl.DateTimeFormat(language, { dateStyle: 'short', timeStyle: 'short' });
 const formatTime = (ms: number | null) => ms === null ? '–' : `${seconds.format(ms / 1000)} s`;
 const rate = ({ count, correct }: Totals) => count ? percent.format(correct / count) : '–';
+
+function modeName(mode: keyof typeof modeLabels): string {
+  return t(modeLabels[mode], { notes: 'Note names', intervals: 'Visual intervals', ear: 'Ear training' }[mode]);
+}
+
+function breakdownLabel(label: string): string {
+  if (language === 'de') return label;
+  const [type, name] = label.split(' · ');
+  if (type === 'Modus') {
+    const mode = (Object.keys(modeLabels) as (keyof typeof modeLabels)[]).find(key => modeLabels[key] === name);
+    return `Mode · ${mode ? modeName(mode) : name}`;
+  }
+  if (type === 'Tonart') {
+    const key = keys.find(candidate => candidate.label === name);
+    return `Key · ${key ? keyLabel(key) : name}`;
+  }
+  if (type === 'Schlüssel') return `Clef · ${name === 'Violin' ? 'Treble' : 'Bass'}`;
+  return `Interval · ${categoryLabel(name)}`;
+}
 
 let refreshId = 0;
 let shownDay = '';
@@ -32,7 +54,7 @@ function showTable(container: HTMLElement, columns: string[], rows: string[][]):
   container.replaceChildren();
   if (!rows.length) {
     const empty = document.createElement('p');
-    empty.textContent = 'Noch keine Daten.';
+    empty.textContent = t('Noch keine Daten.', 'No data yet.');
     container.append(empty);
     return;
   }
@@ -66,36 +88,39 @@ async function refresh(): Promise<void> {
     const stats = await readStatistics(await getDatabase(), filter.value as ModeFilter, sessionId(), day);
     if (request !== refreshId || panel.hidden) return;
     shownDay = day;
-    const summaries: [string, Totals][] = [['Diese Session', stats.session], ['Heute', stats.day], ['Langzeit', stats.lifetime]];
-    showTable(totals, ['Zeitraum', 'Antworten', 'Richtig', 'Falsch', 'Timeouts', 'Quote', 'Ø Antwortzeit', 'Schnellste richtige'],
+    const summaries: [string, Totals][] = [[t('Diese Session', 'This session'), stats.session], [t('Heute', 'Today'), stats.day], [t('Langzeit', 'Long term'), stats.lifetime]];
+    showTable(totals, [t('Zeitraum', 'Period'), t('Antworten', 'Answers'), t('Richtig', 'Correct'), t('Falsch', 'Incorrect'), t('Timeouts', 'Timeouts'), t('Quote', 'Accuracy'), t('Ø Antwortzeit', 'Average response time'), t('Schnellste richtige', 'Fastest correct')],
       summaries.map(([name, data]) => [
         name, String(data.count), String(data.correct), String(data.count - data.correct), String(data.timeout), rate(data),
         formatTime(data.count > data.timeout ? data.responseTime / (data.count - data.timeout) : null),
         formatTime(data.fastestCorrect),
       ]));
-    showTable(trend, ['Lokales Datum', 'Antworten', 'Quote'], stats.trend.map(([date, data]) =>
+    showTable(trend, [t('Lokales Datum', 'Local date'), t('Antworten', 'Answers'), t('Quote', 'Accuracy')], stats.trend.map(([date, data]) =>
       [date, String(data.count), rate(data)]));
-    showTable(history, ['Runde', 'Modus', 'Richtig / Aufgaben', 'Quote', 'Dauer'], stats.history.map(round => [
-      dateTime.format(round.timestamp), modeLabels[round.mode], `${round.totals.correct} / ${round.totals.count}`,
+    showTable(history, [t('Runde', 'Round'), t('Modus', 'Mode'), t('Richtig / Aufgaben', 'Correct / questions'), t('Quote', 'Accuracy'), t('Dauer', 'Duration')], stats.history.map(round => [
+      dateTime.format(round.timestamp), modeName(round.mode), `${round.totals.correct} / ${round.totals.count}`,
       rate(round.totals), formatTime(round.duration),
     ]));
     if (stats.bestRound) {
       const best = document.createElement('p');
-      best.textContent = `Beste Rundenquote: ${rate(stats.bestRound.totals)}. Schnellste richtige Antwort: ${formatTime(stats.lifetime.fastestCorrect)}.`;
+      best.textContent = t(
+        `Beste Rundenquote: ${rate(stats.bestRound.totals)}. Schnellste richtige Antwort: ${formatTime(stats.lifetime.fastestCorrect)}.`,
+        `Best round accuracy: ${rate(stats.bestRound.totals)}. Fastest correct answer: ${formatTime(stats.lifetime.fastestCorrect)}.`,
+      );
       history.prepend(best);
     }
     if (stats.weaknesses.length) {
-      showTable(weaknesses, ['Modus', 'Kategorie', 'Antworten', 'Fehlerquote'], stats.weaknesses.map(profile =>
-        [modeLabels[profile.mode], profile.category, String(profile.count), percent.format(1 - profile.correct / profile.count)]));
+      showTable(weaknesses, [t('Modus', 'Mode'), t('Kategorie', 'Category'), t('Antworten', 'Answers'), t('Fehlerquote', 'Error rate')], stats.weaknesses.map(profile =>
+        [modeName(profile.mode), profile.mode === 'notes' ? answerLabel(profile.category, true) : categoryLabel(profile.category), String(profile.count), percent.format(1 - profile.correct / profile.count)]));
     } else {
       const empty = document.createElement('p');
-      empty.textContent = 'Übungsschwerpunkte erscheinen ab drei Antworten mit mindestens einem Fehler pro Kategorie.';
+      empty.textContent = t('Übungsschwerpunkte erscheinen ab drei Antworten mit mindestens einem Fehler pro Kategorie.', 'Practice priorities appear after at least three answers and one error in a category.');
       weaknesses.replaceChildren(empty);
     }
-    showTable(errors, ['Kategorie', 'Antworten', 'Fehler', 'Fehlerquote'], stats.breakdown.map(row =>
-      [row.name, String(row.count), String(row.errors), percent.format(row.errors / row.count)]));
+    showTable(errors, [t('Kategorie', 'Category'), t('Antworten', 'Answers'), t('Fehler', 'Errors'), t('Fehlerquote', 'Error rate')], stats.breakdown.map(row =>
+      [breakdownLabel(row.name), String(row.count), String(row.errors), percent.format(row.errors / row.count)]));
   } catch {
-    if (request === refreshId) status.textContent = 'Die lokale Statistik konnte nicht geladen werden.';
+    if (request === refreshId) status.textContent = t('Die lokale Statistik konnte nicht geladen werden.', 'Local statistics could not be loaded.');
   }
 }
 
@@ -133,7 +158,7 @@ async function maintain(work: () => Promise<void>): Promise<void> {
     await work();
     return;
   }
-  if (!await beforeUpdate(work)) throw new Error('Beende zuerst alle laufenden Trainingsrunden und Updates.');
+  if (!await beforeUpdate(work)) throw new Error(t('Beende zuerst alle laufenden Trainingsrunden und Updates.', 'Finish all active rounds and updates first.'));
 }
 
 async function modify(work: () => Promise<void>): Promise<void> {
@@ -143,7 +168,7 @@ async function modify(work: () => Promise<void>): Promise<void> {
   try {
     await work();
   } catch (error) {
-    status.textContent = error instanceof Error ? error.message : 'Die Änderung konnte nicht gespeichert werden.';
+    status.textContent = error instanceof Error && language === 'de' ? error.message : t('Die Änderung konnte nicht gespeichert werden.', 'The change could not be saved.');
   } finally {
     busy = false;
   }
@@ -153,18 +178,21 @@ document.querySelector('#statistics-reset')!.addEventListener('click', () => {
   void modify(async () => {
     const scope = level.value as ResetLevel;
     const mode = filter.value as ModeFilter;
-    const selection = mode === 'all' ? 'alle Trainingsmodi' : modeLabels[mode];
+    const selection = mode === 'all' ? t('alle Trainingsmodi', 'all training modes') : modeName(mode);
     const explanation = {
-      session: `Die Statistik dieser Session zurücksetzen (${selection})?`,
-      day: `Die Statistik des aktuellen Kalendertags zurücksetzen (${selection})?`,
-      lifetime: `Langzeitverlauf, Rundengeschichte und adaptive Profile löschen (${selection})? Session und Tag bleiben erhalten.`,
-      all: 'Die gesamte Trainingsstatistik aller Modi löschen? Deine Darstellung bleibt erhalten.',
+      session: t(`Die Statistik dieser Session zurücksetzen (${selection})?`, `Reset this session’s statistics (${selection})?`),
+      day: t(`Die Statistik des aktuellen Kalendertags zurücksetzen (${selection})?`, `Reset today’s statistics (${selection})?`),
+      lifetime: t(
+        `Langzeitverlauf, Rundengeschichte und adaptive Profile löschen (${selection})? Session und Tag bleiben erhalten.`,
+        `Delete long-term history, rounds and adaptive profiles (${selection})? Session and daily totals will be kept.`,
+      ),
+      all: t('Die gesamte Trainingsstatistik aller Modi löschen? Deine Darstellung bleibt erhalten.', 'Delete all training statistics across all modes? Your appearance preference will be kept.'),
     };
     const today = localDate(Date.now());
     if (!await ask(explanation[scope], scope === 'lifetime' || scope === 'all')) return;
     await maintain(async () => resetStatistics(await getDatabase(), scope, mode, sessionId(), today));
     statisticsChanged();
-    status.textContent = 'Statistik wurde zurückgesetzt.';
+    status.textContent = t('Statistik wurde zurückgesetzt.', 'Statistics were reset.');
   });
 });
 
@@ -179,7 +207,7 @@ document.querySelector('#statistics-export')!.addEventListener('click', () => {
     link.click();
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    status.textContent = 'Lokales Statistik-Backup erstellt.';
+    status.textContent = t('Lokales Statistik-Backup erstellt.', 'Local statistics backup created.');
   });
 });
 
@@ -191,11 +219,14 @@ input.addEventListener('change', () => {
   void modify(async () => {
     let backup: unknown;
     try { backup = JSON.parse(await file.text()); }
-    catch { throw new Error('Die Datei enthält kein gültiges JSON.'); }
+    catch { throw new Error(t('Die Datei enthält kein gültiges JSON.', 'The file does not contain valid JSON.')); }
     const data = parseBackup(backup);
-    if (!await ask(`Statistik aller Modi durch dieses Backup ersetzen? Es enthält ${data.attempts.length} Antworten. Deine Darstellung bleibt erhalten.`, true)) return;
+    if (!await ask(t(
+      `Statistik aller Modi durch dieses Backup ersetzen? Es enthält ${data.attempts.length} Antworten. Deine Darstellung bleibt erhalten.`,
+      `Replace statistics for all modes with this backup? It contains ${data.attempts.length} answers. Your appearance preference will be kept.`,
+    ), true)) return;
     await maintain(async () => importStatistics(await getDatabase(), backup));
     statisticsChanged();
-    status.textContent = 'Statistik aus Backup wiederhergestellt.';
+    status.textContent = t('Statistik aus Backup wiederhergestellt.', 'Statistics were restored from the backup.');
   });
 });

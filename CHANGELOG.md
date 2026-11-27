@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 1.0.0 – M6
+
+- Englische Oberfläche und Notenbezeichnungen zusätzlich zu Deutsch.
+- Notensatz wird erst bei Bedarf geladen und bleibt nach dem vollständigen Download offline nutzbar.
+- Barrierefreiheits-, Ressourcen- und Sprachprüfungen im Browsertest.
+- Zweisprachige Datenschutz- und Lizenzhinweise sowie dokumentierte Browser- und Geräteabnahme.
+
 ## 0.6.0 – M5
 
 - Optionale adaptive Auswahl für alle drei Trainingsmodi.
