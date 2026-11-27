@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f3ee">
+    <meta name="description" content="Notenlernen, eine lokale App für Noten- und Intervalltraining.">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <title>Notenlernen</title>
+  </head>
+  <body>
+    <a class="skip" href="#inhalt">Zum Inhalt</a>
+    <header class="shell">
+      <p class="brand">Notenlernen</p>
+      <nav aria-label="Bereiche">
+        <a href="#notennamen">Notennamen</a>
+        <a href="#visuelle-intervalle">Visuelle Intervalle</a>
+        <a href="#gehoerintervalle">Gehörintervalle</a>
+        <a href="#statistik">Statistik</a>
+      </nav>
+    </header>
+    <main id="inhalt" class="shell" tabindex="-1">
+      <section aria-labelledby="bereich">
+        <h1 id="bereich" tabindex="-1">Notennamen</h1>
+        <p id="beschreibung">Das Training für Notennamen folgt in M1.</p>
+      </section>
+      <div class="settings">
+        <label for="theme">Darstellung</label>
+        <select id="theme">
+          <option value="system">System</option>
+          <option value="light">Hell</option>
+          <option value="dark">Dunkel</option>
+        </select>
+        <p id="storage-status" role="status"></p>
+      </div>
+      <div class="offline">
+        <p id="offline-status" role="status"></p>
+        <button id="check-update" type="button" hidden>Nach Updates suchen</button>
+        <button id="apply-update" type="button" hidden>Update anwenden</button>
+      </div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
