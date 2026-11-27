@@ -4,9 +4,18 @@ import { questionCounts, Round, timeLimits } from './round';
 import { holdRound } from './round-lock';
 import { generateIntervalQuestion, type Direction, type IntervalMode, type IntervalQuestion } from './intervals';
 
-export type TrainingMode = 'notes' | 'intervals';
+import { generateEarQuestion, type EarQuestion } from './ear';
+import { playPiano, stopPiano } from './piano';
+
+export type TrainingMode = 'notes' | 'intervals' | 'ear';
 
 const trainer = document.querySelector<HTMLElement>('#training-round')!;
+const clefSettings = document.querySelector<HTMLElement>('#clef-settings')!;
+const keySettings = document.querySelector<HTMLElement>('#key-settings')!;
+const audioCredits = document.querySelector<HTMLElement>('#audio-credits')!;
+const earPlayback = document.querySelector<HTMLElement>('#ear-playback')!;
+const playInterval = document.querySelector<HTMLButtonElement>('#play-interval')!;
+const audioStatus = document.querySelector<HTMLElement>('#audio-status')!;
 const intervalSettings = document.querySelector<HTMLElement>('#interval-settings')!;
 const intervalMode = document.querySelector<HTMLSelectElement>('#interval-mode')!;
 const intervalDirection = document.querySelector<HTMLSelectElement>('#interval-direction')!;
@@ -69,7 +78,8 @@ count.addEventListener('change', () => toggleCustom(count, customCount));
 limit.addEventListener('change', () => toggleCustom(limit, customLimit));
 
 let round: Round | undefined;
-let question: Question | IntervalQuestion;
+let question: Question | IntervalQuestion | EarQuestion;
+let heard = false;
 let displayedMode: TrainingMode | undefined;
 let roundMode: TrainingMode | undefined;
 let resultMode: TrainingMode | undefined;
@@ -87,7 +97,10 @@ export function showTrainer(mode: TrainingMode | undefined): boolean {
   displayedMode = mode;
   const blocked = Boolean(mode && roundMode && mode !== roundMode);
   trainer.hidden = !mode || blocked;
-  intervalSettings.hidden = mode !== 'intervals';
+  intervalSettings.hidden = mode !== 'intervals' && mode !== 'ear';
+  clefSettings.hidden = keySettings.hidden = mode === 'ear';
+  audioCredits.hidden = mode !== 'ear';
+  if (mode !== 'ear') stopPiano();
   play.hidden = !roundMode;
   result.hidden = !mode || resultMode !== mode || Boolean(roundMode);
   setup.hidden = Boolean(roundMode) || !result.hidden;
@@ -95,6 +108,7 @@ export function showTrainer(mode: TrainingMode | undefined): boolean {
 }
 
 function release(): void {
+  stopPiano();
   window.clearInterval(timer);
   window.clearTimeout(feedbackTimer);
   round = undefined;
@@ -141,6 +155,9 @@ function submitAnswer(correct: boolean | null): void {
   const now = performance.now();
   const outcome = round?.answer(now, correct);
   if (!outcome) return;
+  stopPiano();
+  playInterval.disabled = true;
+  audioStatus.textContent = '';
   window.clearInterval(timer);
   for (const button of answers.querySelectorAll('button')) {
     button.setAttribute('aria-disabled', 'true');
@@ -162,28 +179,69 @@ function tick(): void {
   if (remaining === 0) submitAnswer(null);
 }
 
-function showQuestion(): void {
+function beginAnswerWindow(): void {
   if (!round) return;
-  question = roundMode === 'intervals'
-    ? generateIntervalQuestion(selectedKeys, selectedClefs, directions, intervalLevel)
-    : generateQuestion(selectedKeys, selectedClefs);
-  heading.textContent = `Aufgabe ${round.attempts.length + 1} von ${round.total}`;
-  feedback.textContent = '';
-  drawQuestion(notation, question);
-  answers.replaceChildren();
-  for (const option of question.options) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = option;
-    button.addEventListener('click', () => submitAnswer(option === question.correct));
-    answers.append(button);
-  }
   round.next(performance.now());
   countdown.hidden = round.limitMs === null;
   if (!countdown.hidden) {
     tick();
     timer = window.setInterval(tick, 100);
   }
+}
+
+playInterval.addEventListener('click', async () => {
+  if (!round || !('pitches' in question)) return;
+  const current = question;
+  playInterval.disabled = true;
+  audioStatus.textContent = 'Intervall wird abgespielt.';
+  try {
+    if (!await playPiano(current.pitches) || !round || question !== current) return;
+    if (!heard) {
+      heard = true;
+      for (const button of answers.querySelectorAll('button')) button.disabled = false;
+      beginAnswerWindow();
+    }
+    playInterval.textContent = 'Intervall wiederholen';
+    audioStatus.textContent = 'Intervall abgespielt. Wähle eine Antwort.';
+  } catch {
+    if (round && question === current) audioStatus.textContent = 'Die Töne konnten nicht abgespielt werden. Versuche es erneut.';
+  } finally {
+    if (round && question === current && !feedback.textContent) {
+      playInterval.disabled = false;
+      if (trainer.hidden) audioStatus.textContent = '';
+    }
+  }
+});
+
+function showQuestion(): void {
+  if (!round) return;
+  const ear = roundMode === 'ear';
+  question = ear ? generateEarQuestion(directions, intervalLevel)
+    : roundMode === 'intervals' ? generateIntervalQuestion(selectedKeys, selectedClefs, directions, intervalLevel)
+    : generateQuestion(selectedKeys, selectedClefs);
+  heading.textContent = `Aufgabe ${round.attempts.length + 1} von ${round.total}`;
+  feedback.textContent = '';
+  notation.hidden = ear;
+  earPlayback.hidden = !ear;
+  heard = false;
+  if ('pitches' in question) {
+    playInterval.textContent = 'Intervall abspielen';
+    playInterval.disabled = false;
+    audioStatus.textContent = '';
+    countdown.hidden = true;
+  } else {
+    drawQuestion(notation, question);
+  }
+  answers.replaceChildren();
+  for (const option of question.options) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = option;
+    button.disabled = ear;
+    button.addEventListener('click', () => submitAnswer(option === question.correct));
+    answers.append(button);
+  }
+  if (!ear) beginAnswerWindow();
   if (!trainer.hidden) heading.focus();
 }
 
@@ -192,7 +250,7 @@ setup.addEventListener('submit', async (event) => {
   if (start.disabled || !displayedMode) return;
   const requestedMode = displayedMode;
   selectedKeys = keys.filter(({ id }) => keyInputs.get(id)!.checked);
-  if (!selectedKeys.length) {
+  if (requestedMode !== 'ear' && !selectedKeys.length) {
     status.textContent = 'Bitte mindestens eine Tonart wählen.';
     keyInputs.get('C')!.focus();
     return;
@@ -208,7 +266,7 @@ setup.addEventListener('submit', async (event) => {
   start.disabled = true;
   status.textContent = '';
   try {
-    await prepareNotation();
+    if (requestedMode !== 'ear') await prepareNotation();
     releaseRound = await holdRound();
     if (!releaseRound) {
       status.textContent = 'Bitte warte, bis das Update abgeschlossen ist.';

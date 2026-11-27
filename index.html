@@ -32,12 +32,14 @@
         <p id="beschreibung">Lies die Note und wähle ihren Namen.</p>
         <div id="training-round">
           <form id="round-setup">
-            <label for="clefs">Notenschlüssel</label>
-            <select id="clefs">
-              <option value="treble">Violinschlüssel</option>
-              <option value="bass">Bassschlüssel</option>
-              <option value="mixed">Violin- und Bassschlüssel</option>
-            </select>
+            <div id="clef-settings">
+              <label for="clefs">Notenschlüssel</label>
+              <select id="clefs">
+                <option value="treble">Violinschlüssel</option>
+                <option value="bass">Bassschlüssel</option>
+                <option value="mixed">Violin- und Bassschlüssel</option>
+              </select>
+            </div>
             <div id="interval-settings" class="round-settings" hidden>
               <div>
                 <label for="interval-mode">Gefragte Eigenschaft</label>
@@ -55,7 +57,7 @@
                 </select>
               </div>
             </div>
-            <fieldset>
+            <fieldset id="key-settings">
               <legend>Tonarten</legend>
               <div class="quick-keys">
                 <button type="button" data-keys="major">Alle Dur</button>
@@ -87,6 +89,10 @@
             <h2 id="question-heading" tabindex="-1"></h2>
             <p id="countdown" role="timer" hidden></p>
             <div id="notation"></div>
+            <div id="ear-playback" hidden>
+              <button type="button" id="play-interval">Intervall abspielen</button>
+              <p id="audio-status" role="status"></p>
+            </div>
             <div id="answers" class="answers" aria-label="Antwortoptionen"></div>
             <p id="feedback" role="status"></p>
             <button type="button" id="cancel-round">Runde abbrechen</button>
@@ -98,6 +104,7 @@
           </div>
           <p id="round-status" role="status"></p>
         </div>
+        <p id="audio-credits" hidden><a href="/licenses/Salamander-Attribution.txt">Herkunft und Lizenz der Klaviersamples</a></p>
       </section>
       <div class="settings">
         <label for="theme">Darstellung</label>

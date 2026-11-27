@@ -28,7 +28,7 @@ export async function setupPwa(
   const showStatus = () => {
     apply.hidden = !available || available === workers.controller?.scriptURL;
     status.textContent = !apply.hidden ? 'Ein Update ist verfügbar.'
-      : workers.controller ? 'Diese App-Shell ist offline verfügbar.'
+      : workers.controller ? 'Diese App-Shell ist offline verfügbar. Die Klaviersamples sind gespeichert.'
       : 'Offline-Download wird vorbereitet.';
   };
 

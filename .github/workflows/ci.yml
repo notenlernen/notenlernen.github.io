@@ -32,6 +32,18 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps --only-shell chromium firefox webkit
+      - name: Virtuellen Audioausgang für Browsertests starten
+        run: |
+          if ! command -v pulseaudio >/dev/null; then
+            sudo apt-get install --no-install-recommends -y pulseaudio
+          fi
+          audio_runtime="$(mktemp -d)"
+          PULSE_RUNTIME_PATH="$audio_runtime" pulseaudio -n --daemonize=yes --exit-idle-time=-1 \
+            -L 'module-native-protocol-unix auth-anonymous=1' \
+            -L 'module-null-sink sink_name=notenlernen'
+          export PULSE_SERVER="unix:$audio_runtime/native"
+          pactl list short sinks
+          printf 'PULSE_SERVER=%s\n' "$PULSE_SERVER" >> "$GITHUB_ENV"
       - run: npm run test:e2e
       - id: pages-version
         if: github.event_name == 'push'

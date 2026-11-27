@@ -13,6 +13,7 @@ const types = {
   '.js': 'text/javascript',
   '.json': 'application/json',
   '.png': 'image/png',
+  '.wav': 'audio/wav',
   '.webmanifest': 'application/manifest+json',
 };
 
@@ -313,4 +314,53 @@ test('Visuelle Intervalle in beiden Modi und Wechsel bei aktiver Runde', async (
   await page.getByRole('button', { name: 'Runde starten' }).click();
   await expect(score.locator('.vf-stavenote')).toHaveCount(2);
   await expect(page.getByRole('button', { name: 'Prime', exact: true })).toBeVisible();
+});
+
+test('Gehörtraining spielt erst auf Klick und wiederholt dasselbe Intervall offline', async ({ page, context, deployment }) => {
+  await context.addInitScript(() => {
+    Math.random = () => 0.45;
+    const starts = [];
+    Object.defineProperty(globalThis, 'testAudioStarts', { value: starts });
+    const original = globalThis.AudioBufferSourceNode.prototype.start;
+    globalThis.AudioBufferSourceNode.prototype.start = function (...args) {
+      starts.push({ at: args[0], rate: this.playbackRate.value, channels: this.buffer.numberOfChannels });
+      return original.apply(this, args);
+    };
+  });
+  await page.goto(deployment.url);
+  await expect(page.getByText('Die Klaviersamples sind gespeichert.', { exact: false })).toBeVisible();
+  await page.close();
+  deployment.goOffline();
+  await context.setOffline(true);
+  const offline = await context.newPage();
+  await offline.goto(deployment.url + '#gehoerintervalle');
+
+  await offline.getByLabel('Gefragte Eigenschaft').selectOption('quality');
+  await offline.getByLabel('Richtung').selectOption('down');
+  await offline.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
+  await offline.getByLabel('Eigene Aufgabenanzahl').fill('1');
+  await offline.getByLabel('Zeitlimit pro Aufgabe').selectOption('5');
+  await offline.getByRole('button', { name: 'Runde starten' }).click();
+  await expect(offline.getByRole('heading', { name: 'Aufgabe 1 von 1' })).toBeVisible();
+  await expect(offline.getByRole('timer')).toBeHidden();
+  await expect(offline.locator('#answers button:disabled')).toHaveCount(4);
+  expect(await offline.evaluate(() => globalThis.testAudioStarts)).toHaveLength(0);
+
+  await offline.getByRole('button', { name: 'Intervall abspielen' }).click();
+  const replay = offline.getByRole('button', { name: 'Intervall wiederholen' });
+  await expect(replay).toBeEnabled();
+  await expect(offline.getByRole('timer')).toBeVisible();
+  const first = await offline.evaluate(() => globalThis.testAudioStarts);
+  expect(first).toHaveLength(2);
+  expect(first.every(tone => tone.channels === 1)).toBe(true);
+  expect(first[1].at - first[0].at).toBeCloseTo(0.65);
+  await replay.click();
+  await expect(replay).toBeEnabled();
+  const all = await offline.evaluate(() => globalThis.testAudioStarts);
+  expect(all).toHaveLength(4);
+  await expect(offline.getByRole('timer')).toHaveText(/Verbleibend: [1-4] s/);
+  expect(all.slice(2).map(tone => tone.rate)).toEqual(first.map(tone => tone.rate));
+  await offline.getByRole('button', { name: 'reine Quarte', exact: true }).click();
+  await expect(offline.getByRole('heading', { name: 'Rundenauswertung' })).toBeVisible();
+  await expect(offline.getByText('Richtig', { exact: true }).locator('xpath=following-sibling::dd[1]')).toHaveText('1');
 });

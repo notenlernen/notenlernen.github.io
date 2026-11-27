@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## 0.4.0 – M3
+
+- Gehörtraining mit lokal gespeicherten, frei lizenzierten Klaviersamples, Richtungswahl und wiederholbarer Wiedergabe.
+- Beginn des Antwort-Countdowns nach dem ersten Abspielen. Die Offline-Statusanzeige umfasst die Klaviersamples.
+
 ## 0.3.0 – M2
 
 - Visuelles Intervalltraining von Prime bis Oktave mit Intervallzahl und optionaler Qualität.

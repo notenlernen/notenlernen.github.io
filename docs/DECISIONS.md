@@ -25,3 +25,8 @@
 
 - ADR-013: Intervallfragen erzeugen zwei notierte Einzelnoten innerhalb eines Takts. Die Position auf dem System und die klingende Tonhöhe bleiben getrennt. Prime und enharmonische Grenzfälle folgen ihrer Schreibweise.
 - ADR-014: Der M2-PR basierte während der Entwicklung auf dem offenen M1-Branch. Nach dem M1-Merge wurde er auf `main` umgestellt. Die Prüfpipeline läuft für PRs gegen `main`. Nur Pushes auf `main` können veröffentlichen.
+
+## Konkretisierung für M3
+
+- ADR-006: Sieben Aufnahmen aus Salamander Grand Piano v3 decken mit maximal einem Halbton Verschiebung den Bereich A3 bis Es5 ab. CC-BY-Attribution und Lizenzdatei liegen unter `/licenses/`. [Herkunft, Umwandlung und Prüfungen](M3-ABNAHME.md)
+- ADR-015: Das Gehörtraining fragt klingende Halbtonabstände ab. Der Tritonus erhält eine eindeutige Hörbezeichnung. Klaviersamples werden vom Service Worker gemeinsam mit dem Build vorgehalten. Web Audio startet beim expliziten Abspielen der Frage.
