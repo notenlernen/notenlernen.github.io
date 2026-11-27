@@ -37,43 +37,50 @@ export function quickKeys(selection: 'major' | 'minor' | 'simple' | 'all'): Key[
     (selection === 'simple' ? Math.abs(key.fifths) <= 2 : key.mode === selection));
 }
 
+export type AccidentalMark = '' | '#' | 'b' | 'n';
+
+export function accidentalMark(alteration: Alteration, implied: Alteration): AccidentalMark {
+  return alteration === implied ? '' : alteration === 1 ? '#' : alteration === -1 ? 'b' : 'n';
+}
+
+export function pick<T>(items: readonly T[], random: () => number): T {
+  return items[Math.floor(random() * items.length)];
+}
+
+export function shuffle<T>(items: T[], random: () => number): T[] {
+  for (let index = items.length - 1; index > 0; index--) {
+    const other = Math.floor(random() * (index + 1));
+    [items[index], items[other]] = [items[other], items[index]];
+  }
+  return items;
+}
+
 export interface Question {
   key: Key;
   clef: Clef;
   note: Note;
-  accidental: '' | '#' | 'b' | 'n';
+  accidental: AccidentalMark;
   options: string[];
   correct: string;
 }
 
 export function generateQuestion(selectedKeys: Key[], clefs: Clef[], random = Math.random): Question {
-  function pick<T>(items: T[]): T {
-    return items[Math.floor(random() * items.length)];
-  }
-  function shuffle<T>(items: T[]): T[] {
-    for (let index = items.length - 1; index > 0; index--) {
-      const other = Math.floor(random() * (index + 1));
-      [items[index], items[other]] = [items[other], items[index]];
-    }
-    return items;
-  }
-
-  const key = pick(selectedKeys);
-  const clef = pick(clefs);
+  const key = pick(selectedKeys, random);
+  const clef = pick(clefs, random);
   const [lowest, highest] = clef === 'treble' ? [28, 40] : [16, 30]; // C4–A5, E2–E4
   const step = lowest + Math.floor(random() * (highest - lowest + 1));
   const letter = letters[step % 7];
   const implied = keyAlteration(key, letter);
   const alterations: Alteration[] = [-1, 0, 1];
-  const alteration = random() < 0.25 ? pick(alterations.filter((value) => value !== implied)) : implied;
-  const accidental = alteration === implied ? '' : alteration === 1 ? '#' : alteration === -1 ? 'b' : 'n';
+  const alteration = random() < 0.25 ? pick(alterations.filter((value) => value !== implied), random) : implied;
+  const accidental = accidentalMark(alteration, implied);
   const correct = germanName(letter, alteration);
   const distractors = letters.filter((candidate) => candidate !== letter)
     .map((candidate) => germanName(candidate, keyAlteration(key, candidate)));
   if (alteration !== implied) distractors.push(germanName(letter, implied));
-  shuffle(distractors);
+  shuffle(distractors, random);
   return {
     key, clef, note: { letter, octave: Math.floor(step / 7), alteration }, accidental,
-    correct, options: shuffle([correct, ...distractors.slice(0, 3)]),
+    correct, options: shuffle([correct, ...distractors.slice(0, 3)], random),
   };
 }

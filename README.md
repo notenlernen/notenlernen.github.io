@@ -6,7 +6,7 @@ Zieladresse [notenlernen.github.io](https://notenlernen.github.io/)
 
 ## Status
 
-Version 0.2.0 enthält den Notennamentrainer mit 30 Tonarten, Violin- und Bassschlüssel, vier Antwortoptionen, optionalem Zeitlimit und Rundenauswertung. Die Darstellung (Hell, Dunkel oder System) wird lokal gespeichert. Visuelle Intervalle, Gehörtraining und persistente Statistik folgen in späteren Meilensteinen.
+Version 0.3.0 enthält Notennamen- und visuelles Intervalltraining. Beide nutzen 30 Tonarten, Violin- und Bassschlüssel, vier Antwortoptionen, ein optionales Zeitlimit und eine Rundenauswertung. Der Intervalltrainer reicht von Prime bis Oktave und fragt wahlweise die Qualität ab. Gehörtraining und persistente Statistik folgen später.
 
 ## Lokal entwickeln
 
@@ -55,5 +55,6 @@ Die Installation hängt von Browser und Betriebssystem ab. Chromium-basierte Bro
 - [Arbeitsauftrag M0](docs/M0.md)
 - [Abnahme und offene Punkte M0](docs/M0-ABNAHME.md)
 - [Abnahme und offene Punkte M1](docs/M1-ABNAHME.md)
+- [Abnahme und offene Punkte M2](docs/M2-ABNAHME.md)
 - [Entwicklungsregeln](AGENTS.md)
 - [Changelog](CHANGELOG.md)

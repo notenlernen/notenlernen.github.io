@@ -1,11 +1,11 @@
 import './style.css';
 import { isTheme, openDatabase, readTheme, writeTheme } from './storage';
 import { setupPwa } from './pwa';
-import './trainer';
+import { showTrainer } from './trainer';
 
 const areas = [
   { id: 'notennamen', title: 'Notennamen', description: 'Lies die Note und wähle ihren Namen.' },
-  { id: 'visuelle-intervalle', title: 'Visuelle Intervalle', description: 'Das Training für visuelle Intervalle folgt in M2.' },
+  { id: 'visuelle-intervalle', title: 'Visuelle Intervalle', description: 'Bestimme den Abstand zwischen den beiden Noten von links nach rechts.' },
   { id: 'gehoerintervalle', title: 'Gehörintervalle', description: 'Das Gehörtraining folgt in M3.' },
   { id: 'statistik', title: 'Statistik', description: 'Die Trainingsstatistik folgt in M4.' },
 ];
@@ -13,14 +13,15 @@ const areas = [
 const heading = document.querySelector<HTMLHeadingElement>('#bereich')!;
 const description = document.querySelector<HTMLParagraphElement>('#beschreibung')!;
 const links = document.querySelectorAll<HTMLAnchorElement>('nav a');
-const trainer = document.querySelector<HTMLElement>('#note-trainer')!;
+
+let area = areas[0];
 
 function renderArea(moveFocus: boolean): void {
-  if (location.hash === '#inhalt') return;
-  const area = areas.find(({ id }) => location.hash === '#' + id) ?? areas[0];
-  trainer.hidden = area.id !== 'notennamen';
+  if (location.hash !== '#inhalt') area = areas.find(({ id }) => location.hash === '#' + id) ?? areas[0];
+  else if (moveFocus) return;
+  const blocked = showTrainer(area.id === 'notennamen' ? 'notes' : area.id === 'visuelle-intervalle' ? 'intervals' : undefined);
   heading.textContent = area.title;
-  description.textContent = area.description;
+  description.textContent = blocked ? 'Im anderen Trainingsbereich läuft noch eine Runde.' : area.description;
   for (const link of links) {
     if (link.hash === '#' + area.id) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
@@ -29,6 +30,7 @@ function renderArea(moveFocus: boolean): void {
 }
 
 renderArea(false);
+document.addEventListener('training-state-changed', () => renderArea(false));
 window.addEventListener('hashchange', () => renderArea(true));
 for (const link of links) {
   link.addEventListener('click', () => {

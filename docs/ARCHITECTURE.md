@@ -14,3 +14,7 @@ Das Build-Skript erzeugt `version.json` und einen Worker mit Hash im Dateinamen.
 ## Implementierter Stand M1
 
 `src/music.ts` enthält das Notenmodell, die Tonarten und den injizierbaren Zufallsgenerator. `src/round.ts` wertet Antworten, Zeitgrenzen und die Rundensumme anhand übergebener Zeitpunkte aus. `src/trainer.ts` verbindet beide Module mit dem Formular und dem SVG-Notensatz aus `src/notation.ts`. `src/round-lock.ts` synchronisiert aktive Runden und Service-Worker-Updates über Tabs hinweg. Der IndexedDB-Stand aus M0 bleibt gültig.
+
+## Implementierter Stand M2
+
+`src/intervals.ts` trennt diatonische Schrittweite und chromatischen Abstand. Der Generator wählt zuerst die Intervallzahl und danach eine der darstellbaren Qualitäten und Schreibweisen. `src/notation.ts` stellt das Paar als zwei aufeinanderfolgende Noten eines Takts dar. Notennamen und visuelle Intervalle teilen sich den Rundendialog und die Updatesperre. Die Navigation lässt eine begonnene Runde im ursprünglichen Trainingsbereich weiterlaufen.

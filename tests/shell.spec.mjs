@@ -282,3 +282,35 @@ test('Eine offene Runde in einem anderen Tab blockiert bestätigte Updates', asy
   await update.click();
   await expect(page.locator('body')).toHaveAttribute('data-test-release', '2');
 });
+
+test('Visuelle Intervalle in beiden Modi und Wechsel bei aktiver Runde', async ({ page, deployment }) => {
+  await page.addInitScript(() => { Math.random = () => 0; });
+  await page.goto(deployment.url + '#visuelle-intervalle');
+  await page.getByLabel('Richtung').selectOption('down');
+  await page.getByLabel('Gefragte Eigenschaft').selectOption('quality');
+  await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
+  await page.getByLabel('Eigene Aufgabenanzahl').fill('1');
+  await page.getByRole('button', { name: 'Runde starten' }).click();
+  const score = page.getByRole('img', { name: /Zwei Noten im Violinschlüssel/ });
+  await expect(score.locator('.vf-stavenote')).toHaveCount(2);
+  await expect(page.locator('#answers button')).toHaveCount(4);
+
+  await page.getByRole('link', { name: 'Notennamen', exact: true }).click();
+  await expect(page.getByText('Im anderen Trainingsbereich läuft noch eine Runde.')).toBeVisible();
+  await page.getByRole('link', { name: 'Visuelle Intervalle', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Aufgabe 1 von 1' })).toBeVisible();
+  await page.getByRole('button', { name: 'reine Prime', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Rundenauswertung' })).toBeVisible();
+  await expect(page.getByText('Richtig', { exact: true }).locator('xpath=following-sibling::dd[1]')).toHaveText('1');
+
+  await page.getByRole('link', { name: 'Notennamen', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Runde starten' })).toBeVisible();
+  await page.getByRole('link', { name: 'Visuelle Intervalle', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Rundenauswertung' })).toBeVisible();
+  await page.getByRole('button', { name: 'Neue Runde einrichten' }).click();
+  await page.getByLabel('Richtung').selectOption('up');
+  await page.getByLabel('Gefragte Eigenschaft').selectOption('number');
+  await page.getByRole('button', { name: 'Runde starten' }).click();
+  await expect(score.locator('.vf-stavenote')).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'Prime', exact: true })).toBeVisible();
+});

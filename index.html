@@ -30,7 +30,7 @@
       <section aria-labelledby="bereich">
         <h1 id="bereich" tabindex="-1">Notennamen</h1>
         <p id="beschreibung">Lies die Note und wähle ihren Namen.</p>
-        <div id="note-trainer">
+        <div id="training-round">
           <form id="round-setup">
             <label for="clefs">Notenschlüssel</label>
             <select id="clefs">
@@ -38,6 +38,23 @@
               <option value="bass">Bassschlüssel</option>
               <option value="mixed">Violin- und Bassschlüssel</option>
             </select>
+            <div id="interval-settings" class="round-settings" hidden>
+              <div>
+                <label for="interval-mode">Gefragte Eigenschaft</label>
+                <select id="interval-mode">
+                  <option value="number">Intervallzahl</option>
+                  <option value="quality">Intervallzahl und Qualität</option>
+                </select>
+              </div>
+              <div>
+                <label for="interval-direction">Richtung</label>
+                <select id="interval-direction">
+                  <option value="mixed">Gemischt</option>
+                  <option value="up">Aufwärts</option>
+                  <option value="down">Abwärts</option>
+                </select>
+              </div>
+            </div>
             <fieldset>
               <legend>Tonarten</legend>
               <div class="quick-keys">

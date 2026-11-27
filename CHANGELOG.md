@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.3.0 – M2
+
+- Visuelles Intervalltraining von Prime bis Oktave mit Intervallzahl und optionaler Qualität.
+- Aufwärts-, Abwärts- und gemischte Aufgaben mit zwei notierten Tönen.
+- Gemeinsame Rundeneinstellungen, Zeitwertung und Updatesperre für beide Trainingsmodi.
+
 ## 0.2.0 – M1
 
 - Notennamentrainer mit SVG-Notensatz, 30 Tonarten, Schnellwahl, Violin- und Bassschlüssel sowie deutschen Notennamen.
