@@ -20,3 +20,7 @@ Unit-Tests validieren die chromatischen Hörintervalle, Sample-Wiedergaberaten u
 ## Umsetzung in M4
 
 Die Integration prüft die Migration von Schema 1, atomare Speicherung, Modus- und Reset-Isolierung, Kalendertag, Backup-Validierung und Rollback. Die Browser-Matrix prüft Persistenz nach Reload und die bestätigte Wiederherstellung per lokaler Datei. [M4-Abnahmeprotokoll](M4-ABNAHME.md)
+
+## Umsetzung in M5
+
+Tests mit festem Zufallsstartwert prüfen reproduzierbare Gewichtung und die unveränderte Gültigkeit der erzeugten Fragen. Die Integration deckt Schema 2, ältere Backups und getrennte Resets ab. Die Browser-Matrix übt das Aktivieren eines adaptiven Trainings und den sichtbaren Statistikfluss. [M5-Abnahmeprotokoll](M5-ABNAHME.md)

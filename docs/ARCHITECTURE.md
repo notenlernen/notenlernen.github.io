@@ -26,3 +26,7 @@ Das Build-Skript erzeugt `version.json` und einen Worker mit Hash im Dateinamen.
 ## Implementierter Stand M4
 
 IndexedDB-Schema 2 ergänzt Modusindizes für Versuche, Runden und adaptive Profile. `src/statistics.ts` schreibt Versuch, Session- und Tagessumme in einer Transaktion. Eine Rundensumme wird nur für vollständig gespeicherte Runden angelegt. Session und Tag sind getrennte Aggregate, der Langzeitverlauf liest die historischen Antworten. `src/backup.ts` exportiert ein versioniertes Statistikformat und ersetzt validierte Daten in einer gemeinsamen Transaktion. `src/statistics-ui.ts` verbindet die Ansicht, Bestätigung und Aktualisierung zwischen Tabs. Schreibvorgänge bleiben lokal.
+
+## Implementierter Stand M5
+
+`src/adaptive.ts` bildet je Modus und Kategorie Antwortzähler und gewichtet einen begrenzten Satz gültiger Fragen aus den bestehenden Generatoren. IndexedDB-Schema 3 erzeugt die initialen Profile aus der vorhandenen Historie. Danach werden Profile, Versuche und Session-/Tagesaggregate atomar aktualisiert. Die Backupversion bleibt kompatibel. Fehlende Profile älterer Backups werden beim Import aus enthaltenen Antworten rekonstruiert.

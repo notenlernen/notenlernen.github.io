@@ -1,3 +1,4 @@
+import { accumulateProfile, type AdaptiveProfile } from './adaptive.ts';
 import { idb, transaction } from './storage.ts';
 import { statisticsStores, summarizeAttempts, trainingModes, type Attempt } from './statistics.ts';
 
@@ -108,6 +109,13 @@ export function parseBackup(value: unknown): Records {
         Object.entries(summarizeAttempts(entries)).some(([key, expected]) => expected !== stored[key])) {
       throw new Error('Eine Runde passt nicht zu ihren Antworten.');
     }
+  }
+  // M4 exports already had this store, but it contained no live profiles.
+  const derived = new Map<string, AdaptiveProfile>();
+  for (const row of records.attempts) accumulateProfile(row as unknown as Attempt, derived);
+  const imported = new Set(records.adaptiveProfiles.map(row => JSON.stringify([row.mode, row.category])));
+  for (const [key, profile] of derived) {
+    if (!imported.has(key)) records.adaptiveProfiles.push({ ...profile });
   }
   return records;
 }

@@ -36,3 +36,8 @@
 - ADR-004: Session- und Tagesreset entfernen nur die ausgewählten Aggregate. Der Langzeitreset entfernt Versuche, Rundensummen und adaptive Profile. Der Gesamtreset leert alle Statistikstores. Einstellungen liegen außerhalb dieser Transaktionen.
 - ADR-007: JSON-Backup Version 1 enthält die Statistik aller Modi. Die Importprüfung prüft Schlüssel, Datentypen und aus Antworten abgeleitete Rundensummen. Ein Import ersetzt die Statistik nach Bestätigung atomar. Darstellungseinstellungen bleiben lokal.
 - ADR-016: Gewertete Antworten werden sofort gespeichert. Damit bleiben Antworten aus abgebrochenen Runden in den Summen. Eine abgeschlossene Runde wird gesondert gespeichert. Web Locks koordinieren Statistikänderungen und Service-Worker-Updates mit aktiven Runden.
+
+## Konkretisierung für M5
+
+- ADR-017: Adaptivität ist pro Runde optional. Die Auswahl zieht höchstens acht Kandidaten aus den bestehenden Generatoren. Geglättete Fehlerquoten erhöhen die Auswahlwahrscheinlichkeit, während alle lösbaren Standardkandidaten eine positive Chance behalten.
+- ADR-018: Der adaptive Store enthält getrennte lokale Profile. Schema 3 übernimmt die Historie aus M4. Fehlende Profile in älteren Backups werden abgeleitet. Langzeit- und Gesamtreset entfernen die betroffenen Profile, Session und Tagesreset behalten sie.
