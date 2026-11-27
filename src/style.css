@@ -71,3 +71,19 @@ button[aria-disabled="true"] { cursor: default; }
 #round-result dd { margin: 0; }
 #feedback { min-height: 1.6em; }
 input[type="number"] { max-width: 7rem; min-height: 44px; font: inherit; }
+
+#statistics details { margin-block: 1rem; }
+#statistics summary { cursor: pointer; font-weight: 650; }
+#statistics details > button, #statistics details > label { margin-top: .65rem; }
+.table-scroll { max-width: 100%; overflow: auto; margin-block: .6rem; }
+#statistics table { border-collapse: collapse; min-width: 100%; text-align: start; }
+#statistics th, #statistics td { padding: .45rem .65rem; border-bottom: 1px solid var(--line); text-align: start; }
+#statistics-confirm {
+  max-width: min(35rem, calc(100% - 2rem));
+  border: 1px solid var(--line);
+  border-radius: .75rem;
+  background: var(--panel);
+  color: var(--ink);
+}
+#statistics-confirm::backdrop { background: #1018129c; }
+.confirmation-buttons { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }

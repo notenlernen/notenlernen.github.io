@@ -7,7 +7,9 @@ import { generateIntervalQuestion, type Direction, type IntervalMode, type Inter
 import { generateEarQuestion, type EarQuestion } from './ear';
 import { playPiano, stopPiano } from './piano';
 
-export type TrainingMode = 'notes' | 'intervals' | 'ear';
+import { getDatabase } from './storage';
+import { createRoundId, localDate, recordAttempt, recordRound, sessionId, type TrainingMode } from './statistics';
+import { statisticsChanged } from './statistics-ui';
 
 const trainer = document.querySelector<HTMLElement>('#training-round')!;
 const clefSettings = document.querySelector<HTMLElement>('#clef-settings')!;
@@ -78,6 +80,9 @@ count.addEventListener('change', () => toggleCustom(count, customCount));
 limit.addEventListener('change', () => toggleCustom(limit, customLimit));
 
 let round: Round | undefined;
+let roundId: string;
+let saving: Promise<void> = Promise.resolve();
+let saveFailed = false;
 let question: Question | IntervalQuestion | EarQuestion;
 let heard = false;
 let displayedMode: TrainingMode | undefined;
@@ -113,8 +118,9 @@ function release(): void {
   window.clearTimeout(feedbackTimer);
   round = undefined;
   roundMode = undefined;
-  releaseRound?.();
+  const unlock = releaseRound;
   releaseRound = undefined;
+  if (unlock) void saving.finally(unlock);
 }
 
 function showSetup(): void {
@@ -127,6 +133,11 @@ function showSetup(): void {
 
 function finish(endedAt: number): void {
   const summary = round!.summary(endedAt);
+  const record = { id: roundId, mode: roundMode!, timestamp: Date.now(), duration: summary.duration };
+  const expectedCount = round!.attempts.length;
+  saving = saving.then(async () => {
+    if (await recordRound(await getDatabase(), record, expectedCount)) statisticsChanged();
+  }).catch(() => reportSaveFailure(record.id));
   resultMode = roundMode;
   const entries = [
     ['Richtig', String(summary.correct)],
@@ -147,14 +158,41 @@ function finish(endedAt: number): void {
     values.append(term, detail);
   }
   release();
+  if (saveFailed) reportSaveFailure(record.id);
   document.dispatchEvent(new Event('training-state-changed'));
   if (!trainer.hidden && !result.hidden) document.querySelector<HTMLElement>('#result-heading')!.focus();
+}
+
+function reportSaveFailure(id: string): void {
+  if (id !== roundId) return;
+  saveFailed = true;
+  status.textContent = 'Ein Teil dieser Runde konnte nicht dauerhaft gespeichert werden.';
+}
+
+function saveAnswer(attempt: Round['attempts'][number]): void {
+  const id = roundId;
+  const timestamp = Date.now();
+  const note = 'note' in question ? question : undefined;
+  const score = 'notes' in question ? question : undefined;
+  const interval = score ? `Nr. ${score.interval.number}`
+    : 'pitches' in question ? `${Math.abs(question.pitches[1] - question.pitches[0])} Halbtöne` : undefined;
+  const entry = {
+    id: `${id}:${round!.attempts.length}`, roundId: id, sessionId: sessionId(), mode: roundMode!,
+    timestamp, localDate: localDate(timestamp),
+    category: note ? note.correct : interval!, key: note?.key.label ?? score?.key.label,
+    clef: note?.clef ?? score?.clef, interval, ...attempt,
+  };
+  saving = saving.then(async () => {
+    await recordAttempt(await getDatabase(), entry);
+    statisticsChanged();
+  }).catch(() => reportSaveFailure(id));
 }
 
 function submitAnswer(correct: boolean | null): void {
   const now = performance.now();
   const outcome = round?.answer(now, correct);
   if (!outcome) return;
+  saveAnswer(round!.attempts.at(-1)!);
   stopPiano();
   playInterval.disabled = true;
   audioStatus.textContent = '';
@@ -273,6 +311,8 @@ setup.addEventListener('submit', async (event) => {
       return;
     }
     resultMode = undefined;
+    roundId = createRoundId();
+    saveFailed = false;
     roundMode = requestedMode;
     round = new Round(total, limitMs, performance.now());
     document.dispatchEvent(new Event('training-state-changed'));

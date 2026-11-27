@@ -30,3 +30,9 @@
 
 - ADR-006: Sieben Aufnahmen aus Salamander Grand Piano v3 decken mit maximal einem Halbton Verschiebung den Bereich A3 bis Es5 ab. CC-BY-Attribution und Lizenzdatei liegen unter `/licenses/`. [Herkunft, Umwandlung und Prüfungen](M3-ABNAHME.md)
 - ADR-015: Das Gehörtraining fragt klingende Halbtonabstände ab. Der Tritonus erhält eine eindeutige Hörbezeichnung. Klaviersamples werden vom Service Worker gemeinsam mit dem Build vorgehalten. Web Audio startet beim expliziten Abspielen der Frage.
+
+## Konkretisierung für M4
+
+- ADR-004: Session- und Tagesreset entfernen nur die ausgewählten Aggregate. Der Langzeitreset entfernt Versuche, Rundensummen und adaptive Profile. Der Gesamtreset leert alle Statistikstores. Einstellungen liegen außerhalb dieser Transaktionen.
+- ADR-007: JSON-Backup Version 1 enthält die Statistik aller Modi. Die Importprüfung prüft Schlüssel, Datentypen und aus Antworten abgeleitete Rundensummen. Ein Import ersetzt die Statistik nach Bestätigung atomar. Darstellungseinstellungen bleiben lokal.
+- ADR-016: Gewertete Antworten werden sofort gespeichert. Damit bleiben Antworten aus abgebrochenen Runden in den Summen. Eine abgeschlossene Runde wird gesondert gespeichert. Web Locks koordinieren Statistikänderungen und Service-Worker-Updates mit aktiven Runden.

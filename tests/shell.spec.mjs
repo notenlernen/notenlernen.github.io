@@ -130,7 +130,7 @@ test('Update verlangt Zustimmung, übersteht einen Downloadfehler und erhält In
   await expect(page.getByText(offlineReady)).toBeVisible();
   await page.getByLabel('Darstellung').selectOption('dark');
   await page.evaluate(() => new Promise((resolve, reject) => {
-    const open = indexedDB.open('notenlernen', 1);
+    const open = indexedDB.open('notenlernen');
     open.onerror = () => reject(open.error);
     open.onsuccess = () => {
       const database = open.result;
@@ -164,7 +164,7 @@ test('Update verlangt Zustimmung, übersteht einen Downloadfehler und erhält In
   await expect(restarted.locator('body')).toHaveAttribute('data-test-release', '2');
   await expect(restarted.getByLabel('Darstellung')).toHaveValue('dark');
   const attempt = await restarted.evaluate(() => new Promise((resolve, reject) => {
-    const open = indexedDB.open('notenlernen', 1);
+    const open = indexedDB.open('notenlernen');
     open.onerror = () => reject(open.error);
     open.onsuccess = () => {
       const database = open.result;
@@ -363,4 +363,51 @@ test('Gehörtraining spielt erst auf Klick und wiederholt dasselbe Intervall off
   await offline.getByRole('button', { name: 'reine Quarte', exact: true }).click();
   await expect(offline.getByRole('heading', { name: 'Rundenauswertung' })).toBeVisible();
   await expect(offline.getByText('Richtig', { exact: true }).locator('xpath=following-sibling::dd[1]')).toHaveText('1');
+});
+
+test('Statistik persistiert, filtert und stellt ein bestätigtes lokales Backup wieder her', async ({ page, deployment }) => {
+  await page.goto(deployment.url);
+  await page.getByText(offlineReady).waitFor();
+  await page.getByLabel('Darstellung').selectOption('dark');
+  await page.getByLabel('Aufgaben', { exact: true }).selectOption('custom');
+  await page.getByLabel('Eigene Aufgabenanzahl').fill('1');
+  await page.getByRole('button', { name: 'Runde starten' }).click();
+  await page.locator('#answers button').first().click();
+  await expect(page.getByRole('heading', { name: 'Rundenauswertung' })).toBeVisible();
+  await page.getByRole('link', { name: 'Statistik', exact: true }).click();
+
+  const answersFor = name => page.getByRole('row', { name: new RegExp('^' + name + ' ') }).getByRole('cell').nth(1);
+  await expect(answersFor('Langzeit')).toHaveText('1');
+  await page.reload();
+  await expect(answersFor('Diese Session')).toHaveText('1');
+  await page.getByLabel('Trainingsmodus', { exact: true }).selectOption('ear');
+  await expect(answersFor('Langzeit')).toHaveText('0');
+  await page.getByLabel('Trainingsmodus', { exact: true }).selectOption('notes');
+  await expect(answersFor('Langzeit')).toHaveText('1');
+
+  await page.getByText('Lokales Backup', { exact: true }).click();
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Statistik exportieren' }).click();
+  const download = await downloadPromise;
+  const path = await download.path();
+  expect(path).toBeTruthy();
+
+  await page.getByText('Statistik zurücksetzen', { exact: true }).click();
+  await page.getByLabel('Ebene').selectOption('lifetime');
+  await page.getByRole('button', { name: 'Zurücksetzen …' }).click();
+  const dialog = page.getByRole('dialog');
+  const confirm = dialog.getByRole('button', { name: 'Bestätigen' });
+  await expect(confirm).toBeDisabled();
+  await dialog.getByRole('checkbox').check();
+  await confirm.click();
+  await expect(answersFor('Langzeit')).toHaveText('0');
+  await expect(answersFor('Heute')).toHaveText('1');
+
+  await page.getByLabel('Backup-Datei auswählen').setInputFiles(path);
+  await expect(dialog).toBeVisible();
+  await expect(confirm).toBeDisabled();
+  await dialog.getByRole('checkbox').check();
+  await confirm.click();
+  await expect(answersFor('Langzeit')).toHaveText('1');
+  await expect(page.getByLabel('Darstellung')).toHaveValue('dark');
 });

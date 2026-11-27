@@ -16,7 +16,7 @@ test('Schema und Indexe sind versioniert, Theme überlebt erneutes Öffnen', asy
     'roundSummaries', 'sessionAggregates', 'settings',
   ]);
   const attempts = database.transaction('attempts').objectStore('attempts');
-  assert.deepEqual([...attempts.indexNames], ['byModeAndTime', 'byRound', 'bySession']);
+  assert.deepEqual([...attempts.indexNames], ['byMode', 'byModeAndTime', 'byRound', 'bySession']);
   assert.deepEqual(attempts.index('byModeAndTime').keyPath, ['mode', 'timestamp']);
   assert.equal(await readTheme(database), 'system');
   await writeTheme(database, 'dark');
@@ -28,8 +28,6 @@ test('Schema und Indexe sind versioniert, Theme überlebt erneutes Öffnen', asy
 });
 
 test('Ein Versionswechsel gibt die Verbindung frei und erhält die Einstellungen', async () => {
-  // Ein echter Versionswechsel ist erst ab Schema 2 möglich. Simuliert wird
-  // deshalb die Eröffnung einer künftigen Version durch einen zweiten Tab.
   const database = await openDatabase();
   await writeTheme(database, 'light');
   const future = await new Promise((resolve, reject) => {

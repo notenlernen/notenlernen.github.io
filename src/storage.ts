@@ -1,5 +1,5 @@
 export const DATABASE_NAME = 'notenlernen';
-export const DATABASE_VERSION = 1;
+export const DATABASE_VERSION = 2;
 
 export type Theme = 'system' | 'light' | 'dark';
 
@@ -25,6 +25,11 @@ export function openDatabase(): Promise<IDBDatabase> {
         database.createObjectStore('resetEpochs', { keyPath: ['mode', 'level'] });
         database.createObjectStore('sessionAggregates', { keyPath: ['mode', 'sessionId'] });
         database.createObjectStore('dayAggregates', { keyPath: ['mode', 'localDate'] });
+      }
+      if (event.oldVersion < 2) {
+        for (const name of ['attempts', 'roundSummaries', 'adaptiveProfiles']) {
+          request.transaction!.objectStore(name).createIndex('byMode', 'mode');
+        }
       }
     };
     request.onblocked = () => {
@@ -57,4 +62,46 @@ export function writeTheme(database: IDBDatabase, theme: Theme): Promise<void> {
     transaction.oncomplete = () => resolve();
     transaction.onabort = () => reject(transaction.error);
   });
+}
+
+let connection: Promise<IDBDatabase> | undefined;
+
+export function getDatabase(): Promise<IDBDatabase> {
+  connection ??= openDatabase().then((database) => {
+    database.addEventListener('versionchange', () => { connection = undefined; });
+    database.addEventListener('close', () => { connection = undefined; });
+    return database;
+  }).catch((error: unknown) => {
+    connection = undefined;
+    throw error;
+  });
+  return connection;
+}
+
+export function idb<T>(request: IDBRequest<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function transaction<T>(
+  database: IDBDatabase,
+  stores: readonly string[],
+  mode: IDBTransactionMode,
+  work: (transaction: IDBTransaction) => Promise<T>,
+): Promise<T> {
+  const tx = database.transaction(stores, mode);
+  const done = new Promise<void>((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onabort = () => reject(tx.error ?? new Error('Transaktion abgebrochen.'));
+  });
+  try {
+    const [result] = await Promise.all([work(tx), done]);
+    return result;
+  } catch (error) {
+    try { tx.abort(); } catch { /* Already completed or aborted. */ }
+    await done.catch(() => {});
+    throw error;
+  }
 }

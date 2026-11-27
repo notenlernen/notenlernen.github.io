@@ -16,3 +16,7 @@ Deterministische Fixtures prüfen Intervallzahl, Qualität, Richtung, Wiederholu
 ## Umsetzung in M3
 
 Unit-Tests validieren die chromatischen Hörintervalle, Sample-Wiedergaberaten und WAV-Grundfrequenzen. Je Browser prüft ein E2E-Fall die nutzerinitiierte Offline-Wiedergabe mit echten AudioBuffer-Quellen, Wiederholung und Auswertung. [M3-Abnahmeprotokoll](M3-ABNAHME.md)
+
+## Umsetzung in M4
+
+Die Integration prüft die Migration von Schema 1, atomare Speicherung, Modus- und Reset-Isolierung, Kalendertag, Backup-Validierung und Rollback. Die Browser-Matrix prüft Persistenz nach Reload und die bestätigte Wiederherstellung per lokaler Datei. [M4-Abnahmeprotokoll](M4-ABNAHME.md)
