@@ -12,3 +12,7 @@ Die Tests ergänzen deterministische Musik- und Timer-Fixtures sowie drei Browse
 ## Umsetzung in M2
 
 Deterministische Fixtures prüfen Intervallzahl, Qualität, Richtung, Wiederholung von Vorzeichen im selben Takt und Eindeutigkeit der Antworten. Ein Browserfall pro Engine führt beide Modi und den Bereichswechsel während einer aktiven Runde aus. [M2-Abnahmeprotokoll](M2-ABNAHME.md)
+
+## Umsetzung in M3
+
+Unit-Tests validieren die chromatischen Hörintervalle, Sample-Wiedergaberaten und WAV-Grundfrequenzen. Je Browser prüft ein E2E-Fall die nutzerinitiierte Offline-Wiedergabe mit echten AudioBuffer-Quellen, Wiederholung und Auswertung. [M3-Abnahmeprotokoll](M3-ABNAHME.md)

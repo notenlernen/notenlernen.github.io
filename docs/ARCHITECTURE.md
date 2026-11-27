@@ -18,3 +18,7 @@ Das Build-Skript erzeugt `version.json` und einen Worker mit Hash im Dateinamen.
 ## Implementierter Stand M2
 
 `src/intervals.ts` trennt diatonische Schrittweite und chromatischen Abstand. Der Generator wählt zuerst die Intervallzahl und danach eine der darstellbaren Qualitäten und Schreibweisen. `src/notation.ts` stellt das Paar als zwei aufeinanderfolgende Noten eines Takts dar. Notennamen und visuelle Intervalle teilen sich den Rundendialog und die Updatesperre. Die Navigation lässt eine begonnene Runde im ursprünglichen Trainingsbereich weiterlaufen.
+
+## Implementierter Stand M3
+
+`src/ear.ts` erzeugt klingende Intervallfragen und wählt Aufnahmen nach MIDI-Tonhöhe. `src/piano.ts` dekodiert die lokalen Dateien einmal pro Tab und plant beide Tonereignisse mit Web Audio. Der bestehende Rundendialog startet den Antwort-Countdown nach der ersten vollständigen Wiedergabe. Statistikpersistenz folgt in M4.

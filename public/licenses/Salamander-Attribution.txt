@@ -1,0 +1,12 @@
+Salamander Grand Piano v3
+Recordings by Alexander Holm. FLAC distribution remapped by kinwie.
+Creative Commons Attribution 3.0 Unported (CC BY 3.0)
+https://creativecommons.org/licenses/by/3.0/
+Original release: https://archive.org/details/SalamanderGrandPianoV3
+Pinned audio source: https://github.com/sfzinstruments/SalamanderGrandPiano/tree/3382bf9496bba2486f5ab0de55a264d1dfc38404
+
+Layer v8 recordings used: A3, C4, D#4, F#4, A4, C5 and D#5.
+Changes: downmixed to mono, resampled to 22,050 Hz, trimmed to 1.05 s,
+faded out from 0.85 s, saved as 16-bit PCM WAV and renamed by MIDI pitch.
+Playback may shift a recording by one semitone to cover adjacent keys.
+License text: Salamander-CC-BY-3.0.txt

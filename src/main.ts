@@ -6,7 +6,7 @@ import { showTrainer } from './trainer';
 const areas = [
   { id: 'notennamen', title: 'Notennamen', description: 'Lies die Note und wähle ihren Namen.' },
   { id: 'visuelle-intervalle', title: 'Visuelle Intervalle', description: 'Bestimme den Abstand zwischen den beiden Noten von links nach rechts.' },
-  { id: 'gehoerintervalle', title: 'Gehörintervalle', description: 'Das Gehörtraining folgt in M3.' },
+  { id: 'gehoerintervalle', title: 'Gehörintervalle', description: 'Höre beide Klaviertöne und bestimme das Intervall.' },
   { id: 'statistik', title: 'Statistik', description: 'Die Trainingsstatistik folgt in M4.' },
 ];
 
@@ -19,7 +19,7 @@ let area = areas[0];
 function renderArea(moveFocus: boolean): void {
   if (location.hash !== '#inhalt') area = areas.find(({ id }) => location.hash === '#' + id) ?? areas[0];
   else if (moveFocus) return;
-  const blocked = showTrainer(area.id === 'notennamen' ? 'notes' : area.id === 'visuelle-intervalle' ? 'intervals' : undefined);
+  const blocked = showTrainer(area.id === 'notennamen' ? 'notes' : area.id === 'visuelle-intervalle' ? 'intervals' : area.id === 'gehoerintervalle' ? 'ear' : undefined);
   heading.textContent = area.title;
   description.textContent = blocked ? 'Im anderen Trainingsbereich läuft noch eine Runde.' : area.description;
   for (const link of links) {
